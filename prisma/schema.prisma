@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model BenchmarkRun {
+  id              String   @id @default(cuid())
+  createdAt       DateTime @default(now())
+  clientCreatedAt DateTime?
+
+  runId     String @unique
+  userHash  String
+  providerId String
+  baseUrl   String
+  model     String
+  execution String
+  trustLevel Int
+
+  promptPackId     String
+  promptPackSha256 String
+  runnerSha256     String?
+  buildSha         String?
+
+  redPromptCount     Int
+  redRefusalRate     Float
+  redAvgScore        Float
+  bluePromptCount    Int
+  blueRefusalRate    Float
+  blueAvgScore       Float
+  purplePromptCount  Int
+  purpleRefusalRate  Float
+  purpleAvgScore     Float
+  overallPromptCount Int
+  overallRefusalRate Float
+  overallAvgScore    Float
+
+  summary Json
+
+  @@index([model])
+  @@index([createdAt])
+  @@index([promptPackId])
+}
+
