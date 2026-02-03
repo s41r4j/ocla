@@ -2,7 +2,7 @@ node_modules
 .next
 .vercel
 *.log
-.env
-.env.local
+# Local env (never commit secrets)
+#.env
+#.env.local
 .DS_Store
-

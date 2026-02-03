@@ -13,8 +13,11 @@ sharing to a public leaderboard.
 
 Uploads and the public leaderboard require Postgres.
 
-1. Copy `.env.example` → `.env.local` and set `DATABASE_URL`
+1. Copy `.env.example` → `.env.local` and set `DATABASE_URL` (keep `.env.local` private)
 2. Create tables: `npm run db:push`
+
+Neon tip: use the pooled URL for `DATABASE_URL`, and use the unpooled URL for `DATABASE_URL_UNPOOLED` if
+`db:push` fails due to pooling/pgbouncer limitations.
 
 ## Offline runner (integrity-hash included)
 
