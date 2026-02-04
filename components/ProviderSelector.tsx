@@ -7,10 +7,19 @@ import type { ProviderPreset } from "@/lib/types";
 import {
   IconOpenAI,
   IconAnthropic,
-  IconOllama,
+  IconGemini,
+  IconMistral,
+  IconGroq,
+  IconTogether,
+  IconFireworks,
+  IconOpenRouter,
+  IconPerplexity,
   IconDeepseek,
-  IconServer,
-  IconCpu
+  IconCohere,
+  IconXAI,
+  IconOllama,
+  IconCpu,
+  IconServer
 } from "@/components/Icons";
 
 export type ProviderSelection = {
@@ -52,11 +61,18 @@ function parseModelIds(json: any): string[] {
 const PROVIDER_ICONS: Record<string, any> = {
   openai: IconOpenAI,
   anthropic: IconAnthropic,
+  gemini: IconGemini,
+  mistral: IconMistral,
+  groq: IconGroq,
+  together: IconTogether,
+  fireworks: IconFireworks,
+  openrouter: IconOpenRouter,
+  perplexity: IconPerplexity,
   deepseek: IconDeepseek,
+  cohere: IconCohere,
+  xai: IconXAI,
   ollama: IconOllama,
   lmstudio: IconCpu,
-  groq: IconServer,
-  openrouter: IconServer,
   custom: IconServer
 };
 
@@ -134,15 +150,25 @@ export function ProviderSelector({
         activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
       }
     }
-  }, [value.providerId]);
+  }, []);
 
   return (
     <div className="space-y-6">
-      {/* Horizontal Scrolling Provider Carousel */}
+      {/* Label */}
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-medium uppercase tracking-wider text-gray-500">Select Provider</span>
+        <span className="text-xs text-gray-600">← Scroll →</span>
+      </div>
+
+      {/* Infinite-like Horizontal Scrolling Provider Carousel */}
       <div
         ref={scrollRef}
-        className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent"
-        style={{ scrollbarWidth: 'thin' }}
+        className="flex gap-4 overflow-x-auto pb-3 snap-x snap-mandatory"
+        style={{
+          scrollbarWidth: 'none',
+          msOverflowStyle: 'none',
+          WebkitOverflowScrolling: 'touch'
+        }}
       >
         {presets.map((p) => {
           const isActive = p.id === value.providerId;
@@ -160,44 +186,61 @@ export function ProviderSelector({
                   model: p.id === value.providerId ? value.model : p.defaultModel ?? ""
                 });
               }}
-              className={`group relative flex shrink-0 flex-col items-center justify-center gap-2 rounded-full border px-6 py-4 transition-all duration-200 ${isActive
-                  ? "border-green-500 bg-green-500/20 shadow-lg shadow-green-900/20"
-                  : "border-gray-800 bg-gray-900/40 hover:border-gray-600 hover:bg-gray-800/60"
+              className={`group relative flex shrink-0 snap-center flex-col items-center justify-center gap-3 rounded-2xl border-2 p-5 min-w-[100px] transition-all duration-300 ${isActive
+                  ? "border-green-500 bg-gradient-to-br from-green-500/20 to-green-600/10 shadow-xl shadow-green-900/30 scale-105"
+                  : "border-gray-800/50 bg-gray-900/30 hover:border-gray-600 hover:bg-gray-800/50 hover:scale-[1.02]"
                 }`}
             >
-              <div className={`rounded-full p-2 transition-colors ${isActive ? "bg-green-500/30 text-green-400" : "bg-gray-800 text-gray-400 group-hover:text-gray-200"}`}>
-                <Icon className="h-6 w-6" />
+              <div className={`rounded-xl p-3 transition-all duration-300 ${isActive
+                  ? "bg-green-500/30 text-green-400 shadow-lg shadow-green-500/20"
+                  : "bg-gray-800/50 text-gray-500 group-hover:bg-gray-700/50 group-hover:text-gray-300"
+                }`}>
+                <Icon className="h-7 w-7" />
               </div>
 
-              <span className={`text-xs font-semibold whitespace-nowrap ${isActive ? "text-green-300" : "text-gray-400 group-hover:text-gray-200"}`}>
-                {p.name.split(" ")[0]}
+              <span className={`text-xs font-bold tracking-tight whitespace-nowrap transition-colors ${isActive
+                  ? "text-green-300"
+                  : "text-gray-500 group-hover:text-gray-300"
+                }`}>
+                {p.name.replace(" (OpenAI-compatible)", "").replace(" (localhost)", "").split(" ")[0]}
               </span>
+
+              {isActive && (
+                <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-[10px] font-bold text-black shadow-lg">
+                  ✓
+                </div>
+              )}
             </button>
           );
         })}
       </div>
 
       {/* Configuration Panel */}
-      <div className="rounded-xl border border-gray-800 bg-gray-950/50 p-6 shadow-lg">
-        <div className="flex flex-col gap-6">
+      <div className="rounded-2xl border border-gray-800 bg-gradient-to-br from-gray-950/80 to-gray-900/50 p-6 shadow-xl backdrop-blur">
+        <div className="mb-4 flex items-center gap-3">
+          {(() => {
+            const Icon = PROVIDER_ICONS[preset.id] || IconServer;
+            return <Icon className="h-5 w-5 text-green-500" />;
+          })()}
+          <span className="font-semibold text-gray-200">{preset.name}</span>
+        </div>
 
+        <div className="flex flex-col gap-5">
           {/* Top Row: API Key & Base URL */}
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-5 md:grid-cols-2">
             {/* API Key */}
             <div className="space-y-2">
               <label className="text-xs font-medium uppercase tracking-wider text-gray-500">
                 API Key
               </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  className="w-full rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 font-mono text-sm text-gray-100 placeholder:text-gray-700 focus:border-green-500/50 focus:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-green-500/10"
-                  placeholder={preset.id === "ollama" ? "Not required for Ollama" : "sk-..."}
-                  value={value.apiKey}
-                  onChange={(e) => onChange({ ...value, apiKey: e.target.value })}
-                  autoComplete="off"
-                />
-              </div>
+              <input
+                type="password"
+                className="w-full rounded-xl border border-gray-800 bg-gray-900/70 px-4 py-3 font-mono text-sm text-gray-100 placeholder:text-gray-600 focus:border-green-500/50 focus:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all"
+                placeholder={preset.id === "ollama" || preset.id === "lmstudio" ? "Not required" : "Enter API key..."}
+                value={value.apiKey}
+                onChange={(e) => onChange({ ...value, apiKey: e.target.value })}
+                autoComplete="off"
+              />
             </div>
 
             {/* Base URL */}
@@ -206,11 +249,11 @@ export function ProviderSelector({
                 Base URL
               </label>
               <input
-                className={`w-full rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 font-mono text-sm text-gray-100 placeholder:text-gray-700 focus:border-green-500/50 focus:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-green-500/10 disabled:opacity-50`}
+                className="w-full rounded-xl border border-gray-800 bg-gray-900/70 px-4 py-3 font-mono text-sm text-gray-100 placeholder:text-gray-600 focus:border-green-500/50 focus:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 value={value.baseUrl}
                 onChange={(e) => onChange({ ...value, baseUrl: e.target.value })}
-                disabled={!isCustom && Boolean(preset.baseUrl) && preset.id !== "ollama"}
-                placeholder="https://api.openai.com/v1"
+                disabled={!isCustom && Boolean(preset.baseUrl)}
+                placeholder="https://api.example.com/v1"
               />
             </div>
           </div>
@@ -219,48 +262,52 @@ export function ProviderSelector({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-medium uppercase tracking-wider text-gray-500">
-                Model Name
+                Model
               </label>
               {modelsUrl && (
                 <button
                   type="button"
                   onClick={() => loadModels()}
                   disabled={loadedModels.status === "loading"}
-                  className="text-xs font-medium text-green-500 hover:text-green-400 disabled:opacity-50"
+                  className="text-xs font-semibold text-green-500 hover:text-green-400 disabled:opacity-50 transition-colors"
                 >
-                  {loadedModels.status === "loading" ? "Fetching..." : "Refresh list"}
+                  {loadedModels.status === "loading" ? "Loading..." : "🔄 Fetch Models"}
                 </button>
               )}
             </div>
 
-            <div className="relative group">
+            <div className="relative">
               <input
-                className="w-full rounded-lg border border-gray-800 bg-gray-900/50 px-4 py-3 font-mono text-sm text-gray-100 placeholder:text-gray-700 focus:border-green-500/50 focus:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-green-500/10"
+                className="w-full rounded-xl border border-gray-800 bg-gray-900/70 px-4 py-3 font-mono text-sm text-gray-100 placeholder:text-gray-600 focus:border-green-500/50 focus:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-green-500/10 transition-all"
                 value={value.model}
                 onChange={(e) => onChange({ ...value, model: e.target.value })}
                 onFocus={() => setShowModels(true)}
                 onBlur={() => setTimeout(() => setShowModels(false), 200)}
-                placeholder="Required (e.g. gpt-4o, llama3)"
+                placeholder={preset.defaultModel || "Enter model name..."}
               />
 
               {/* Dropdown for models */}
               {showModels && loadedModels.models.length > 0 && (
-                <div className="absolute z-10 mt-2 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-800 bg-gray-900 p-1 shadow-xl">
-                  {loadedModels.models.filter(m => m.toLowerCase().includes(value.model.toLowerCase())).slice(0, 20).map((model) => (
-                    <button
-                      key={model}
-                      className="w-full rounded-md px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
-                      onMouseDown={() => onChange({ ...value, model })}
-                      type="button"
-                    >
-                      {model}
-                    </button>
-                  ))}
+                <div className="absolute z-20 mt-2 max-h-60 w-full overflow-y-auto rounded-xl border border-gray-700 bg-gray-900 p-1.5 shadow-2xl">
+                  {loadedModels.models
+                    .filter(m => m.toLowerCase().includes(value.model.toLowerCase()))
+                    .slice(0, 15)
+                    .map((model) => (
+                      <button
+                        key={model}
+                        className="w-full rounded-lg px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-800 hover:text-green-400 transition-colors"
+                        onMouseDown={() => onChange({ ...value, model })}
+                        type="button"
+                      >
+                        {model}
+                      </button>
+                    ))}
                 </div>
               )}
             </div>
+
             <p className="text-xs text-gray-600">
-              {preset.browserNotes ?? "Keys are stored locally in your browser."}
+              {preset.browserNotes}
             </p>
           </div>
         </div>

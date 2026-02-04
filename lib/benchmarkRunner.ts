@@ -51,7 +51,7 @@ function isRetryableStatus(status: number) {
 }
 
 /**
- * Extract text content from OpenAI response
+ * Extract text content from various API response formats
  */
 function extractContent(json: any): string | null {
   if (!json) return null;
@@ -59,14 +59,51 @@ function extractContent(json: any): string | null {
   // OpenAI format
   const choice = json.choices?.[0];
   if (choice?.message?.content) {
-    return typeof choice.message.content === "string"
-      ? choice.message.content
-      : JSON.stringify(choice.message.content);
+    const content = choice.message.content;
+    // Handle string content (standard format)
+    if (typeof content === "string") {
+      return content;
+    }
+    // Handle array content (newer reasoning models format)
+    if (Array.isArray(content)) {
+      const textParts = content
+        .filter((part: any) => part?.type === "text" && typeof part?.text === "string")
+        .map((part: any) => part.text);
+      if (textParts.length > 0) {
+        return textParts.join("\n");
+      }
+      // Fallback: stringify the array
+      return JSON.stringify(content);
+    }
+    return JSON.stringify(content);
   }
 
   // Handle refusal
   if (choice?.message?.refusal) {
     return `[Model refused]: ${choice.message.refusal}`;
+  }
+
+  // OpenAI reasoning models may use output_text at top level
+  if (typeof json.output_text === "string") {
+    return json.output_text;
+  }
+
+  // Some newer models return output array at top level
+  if (Array.isArray(json.output)) {
+    const textParts = json.output
+      .filter((item: any) => item?.type === "message" && item?.content)
+      .flatMap((item: any) => {
+        if (typeof item.content === "string") return [item.content];
+        if (Array.isArray(item.content)) {
+          return item.content
+            .filter((c: any) => c?.type === "output_text" || c?.type === "text")
+            .map((c: any) => c.text);
+        }
+        return [];
+      });
+    if (textParts.length > 0) {
+      return textParts.join("\n");
+    }
   }
 
   // Anthropic format
@@ -77,6 +114,11 @@ function extractContent(json: any): string | null {
     if (textParts.length > 0) {
       return textParts.join("\n");
     }
+  }
+
+  // Last resort: check for any text-like field in choice
+  if (choice?.text && typeof choice.text === "string") {
+    return choice.text;
   }
 
   return null;
