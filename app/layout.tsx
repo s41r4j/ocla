@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
-  title: "OCLA — Open Cyber LLM Arena",
+  title: "OCLA | Open Cyber LLM Arena",
   description:
     "A transparent, crowdsourced benchmarking platform for evaluating LLMs on cybersecurity tasks."
 };
@@ -14,7 +14,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen">
-        <div className="mx-auto max-w-5xl px-4 py-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
           <header className="flex items-center justify-between gap-4 border-b border-gray-800 pb-4">
             <Link href="/" className="flex items-center gap-2 text-xl font-semibold tracking-tight text-gray-100">
               <Image src="/logo.svg" alt="OCLA Logo" width={32} height={32} className="h-8 w-8" />
