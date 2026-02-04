@@ -1,6 +1,7 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
@@ -16,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="mx-auto max-w-5xl px-4 py-6">
           <header className="flex items-center justify-between gap-4 border-b border-gray-800 pb-4">
             <Link href="/" className="flex items-center gap-2 text-xl font-semibold tracking-tight text-gray-100">
-              <img src="/logo.svg" alt="OCLA Logo" className="h-8 w-8" />
+              <Image src="/logo.svg" alt="OCLA Logo" width={32} height={32} className="h-8 w-8" />
               OCLA
             </Link>
             <nav className="flex items-center gap-4 text-sm text-gray-300">
