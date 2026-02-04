@@ -1,18 +1,24 @@
 import { NextResponse } from "next/server";
 
-import { getPrisma } from "@/lib/db";
+import { getPrisma, getDbStatus } from "@/lib/db";
 
 // Prevent static prerendering - this route requires DB access
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET() {
-  const prisma = getPrisma();
-  if (!prisma) {
-    return NextResponse.json({ rows: [], dbEnabled: false });
-  }
-
   try {
+    const prisma = getPrisma();
+
+    if (!prisma) {
+      const status = getDbStatus();
+      return NextResponse.json({
+        rows: [],
+        dbEnabled: false,
+        error: status.error ?? "Prisma client not available"
+      });
+    }
+
     const grouped = await prisma.benchmarkRun.groupBy({
       by: ["model"],
       _count: { _all: true },
@@ -29,7 +35,12 @@ export async function GET() {
       .sort((a, b) => b.avgScore - a.avgScore);
 
     return NextResponse.json({ rows, dbEnabled: true });
-  } catch {
-    return NextResponse.json({ rows: [], dbEnabled: true }, { status: 503 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("Leaderboard API error:", message);
+    return NextResponse.json(
+      { rows: [], dbEnabled: false, error: message },
+      { status: 500 }
+    );
   }
 }
