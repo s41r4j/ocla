@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 
 import { getPrisma } from "@/lib/db";
 
+// Prevent static prerendering - this route requires DB access
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 export async function GET() {
   const prisma = getPrisma();
   if (!prisma) {

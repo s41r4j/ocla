@@ -280,6 +280,7 @@ export async function runBenchmark(options: RunBenchmarkOptions): Promise<Benchm
       category: prompt.category,
       title: prompt.title,
       refused: scored.refused,
+      hedging: scored.hedging,
       score: scored.score,
       expectedKeywords: scored.expectedKeywords,
       matchedKeywords: scored.matchedKeywords,

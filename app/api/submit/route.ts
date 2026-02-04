@@ -3,6 +3,10 @@ import { z } from "zod";
 
 import { getPrisma } from "@/lib/db";
 
+// Prevent static prerendering - this route requires DB access
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 const categorySummarySchema = z.object({
   category: z.enum(["red", "blue", "purple"]),
   promptCount: z.number().int().min(0).max(500),

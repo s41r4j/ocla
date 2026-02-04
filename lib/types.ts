@@ -26,11 +26,17 @@ export type ProviderPreset = {
   browserNotes?: string;
 };
 
+export type WeightedKeyword = {
+  word: string;
+  weight: number;
+};
+
 export type BenchmarkItem = {
   promptId: string;
   category: PromptCategory;
   title: string;
   refused: boolean;
+  hedging?: boolean;
   score: number; // 0..100
   matchedKeywords: string[];
   expectedKeywords: string[];
