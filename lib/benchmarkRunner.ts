@@ -42,11 +42,95 @@ function isRetryableStatus(status: number) {
 
 function prefersMaxCompletionTokens(model: string) {
   const m = model.toLowerCase();
-  return m.startsWith("o1") || m.startsWith("o3") || m.startsWith("o4");
+  // o-series models, GPT-4o, and newer models
+  return m.startsWith("o1") || m.startsWith("o3") || m.startsWith("o4") ||
+    m.includes("gpt-4o") || m.includes("gpt-4-turbo");
 }
 
 function prefersDefaultTemperatureOnly(model: string) {
-  return prefersMaxCompletionTokens(model);
+  const m = model.toLowerCase();
+  // o-series reasoning models don't support temperature
+  return m.startsWith("o1") || m.startsWith("o3") || m.startsWith("o4");
+}
+
+/**
+ * Extract text content from various OpenAI-compatible response formats
+ */
+function extractOpenAiContent(json: any): string | null {
+  if (!json) return null;
+
+  // Standard format: choices[0].message.content
+  const choice = json.choices?.[0];
+  if (!choice) return null;
+
+  const message = choice.message;
+  if (!message) return null;
+
+  // Handle content as string (most common)
+  if (typeof message.content === "string") {
+    return message.content;
+  }
+
+  // Handle content as array (newer multi-modal format)
+  if (Array.isArray(message.content)) {
+    const textParts = message.content
+      .filter((part: any) => part?.type === "text" && typeof part?.text === "string")
+      .map((part: any) => part.text);
+    if (textParts.length > 0) {
+      return textParts.join("\n");
+    }
+  }
+
+  // Handle refusal (model declined to answer)
+  if (typeof message.refusal === "string" && message.refusal) {
+    return `[Model refused]: ${message.refusal}`;
+  }
+
+  // Handle delta for streaming responses (shouldn't happen but be safe)
+  if (choice.delta?.content) {
+    return choice.delta.content;
+  }
+
+  // Handle finish_reason without content (e.g., length limit)
+  if (choice.finish_reason === "length") {
+    return message.content ?? "[Response truncated due to length limit]";
+  }
+
+  // Handle content_filter
+  if (choice.finish_reason === "content_filter") {
+    return "[Response filtered by content policy]";
+  }
+
+  // Fallback: try to get any string content
+  if (message.content === null && choice.finish_reason) {
+    return `[No content - finish_reason: ${choice.finish_reason}]`;
+  }
+
+  return null;
+}
+
+/**
+ * Extract text content from Anthropic response format
+ */
+function extractAnthropicContent(json: any): string | null {
+  if (!json) return null;
+
+  const contentBlocks: any[] | undefined = json.content;
+  if (!Array.isArray(contentBlocks)) return null;
+
+  const textParts = contentBlocks
+    .filter((b) => b?.type === "text" && typeof b?.text === "string")
+    .map((b) => b.text);
+
+  if (textParts.length === 0) {
+    // Check for stop_reason
+    if (json.stop_reason === "end_turn" || json.stop_reason === "stop_sequence") {
+      return "[Empty response]";
+    }
+    return null;
+  }
+
+  return textParts.join("\n");
 }
 
 async function callOpenAiChatCompletions(args: {
@@ -62,6 +146,7 @@ async function callOpenAiChatCompletions(args: {
   if (args.apiKey) headers.Authorization = `Bearer ${args.apiKey}`;
 
   type TokenParamKey = "max_tokens" | "max_completion_tokens";
+
   const buildBody = (tokenKey: TokenParamKey, includeTemperature: boolean) => {
     const body: Record<string, unknown> = {
       model: args.model,
@@ -80,14 +165,14 @@ async function callOpenAiChatCompletions(args: {
         headers,
         body: buildBody(tokenKey, includeTemperature)
       },
-      30_000
+      60_000 // Increased timeout for slower models
     );
     const text = await res.text();
     let json: any = null;
     try {
-      json = JSON.parse(text) as any;
+      json = JSON.parse(text);
     } catch {
-      // keep json null
+      // Keep json null if parsing fails
     }
     return { res, text, json };
   };
@@ -98,13 +183,19 @@ async function callOpenAiChatCompletions(args: {
   const otherKey: TokenParamKey = preferredKey === "max_tokens" ? "max_completion_tokens" : "max_tokens";
   const initialIncludeTemperature = !prefersDefaultTemperatureOnly(args.model);
 
+  // Build attempt configurations
   const attemptConfigs: { tokenKey: TokenParamKey; includeTemperature: boolean }[] = [
     { tokenKey: preferredKey, includeTemperature: initialIncludeTemperature }
   ];
-  if (initialIncludeTemperature) attemptConfigs.push({ tokenKey: preferredKey, includeTemperature: false });
+  if (initialIncludeTemperature) {
+    attemptConfigs.push({ tokenKey: preferredKey, includeTemperature: false });
+  }
   attemptConfigs.push({ tokenKey: otherKey, includeTemperature: initialIncludeTemperature });
-  if (initialIncludeTemperature) attemptConfigs.push({ tokenKey: otherKey, includeTemperature: false });
+  if (initialIncludeTemperature) {
+    attemptConfigs.push({ tokenKey: otherKey, includeTemperature: false });
+  }
 
+  // Deduplicate attempts
   const seen = new Set<string>();
   const uniqueAttempts = attemptConfigs.filter((a) => {
     const key = `${a.tokenKey}:${a.includeTemperature ? "t" : "n"}`;
@@ -114,31 +205,46 @@ async function callOpenAiChatCompletions(args: {
   });
 
   let lastError: Error | null = null;
+  let lastJson: any = null;
+
   for (const attempt of uniqueAttempts) {
     const { res, text, json } = await doRequest(attempt.tokenKey, attempt.includeTemperature);
+    lastJson = json;
+
     if (res.ok) {
-      const content: string | undefined = json?.choices?.[0]?.message?.content;
-      if (!content) throw new Error("Unexpected LLM response format (missing choices[0].message.content)");
-      return content;
+      const content = extractOpenAiContent(json);
+      if (content !== null) {
+        return content;
+      }
+      // If we got a 200 but couldn't extract content, log for debugging
+      console.warn("OpenAI returned 200 but content extraction failed:", JSON.stringify(json).slice(0, 500));
+      throw new Error(`Unexpected LLM response format: ${JSON.stringify(json).slice(0, 200)}`);
     }
 
+    // Build error message
     const errorMessage =
       typeof json?.error?.message === "string"
-        ? (json.error.message as string)
+        ? json.error.message
         : typeof text === "string"
-          ? text
-          : "";
-    const err = new Error(`LLM request failed (${res.status}): ${errorMessage.slice(0, 500)}`);
+          ? text.slice(0, 500)
+          : "Unknown error";
+
+    const err = new Error(`LLM request failed (${res.status}): ${errorMessage}`);
     (err as any).status = res.status;
     lastError = err;
 
+    // Only retry on 400 if it's parameter-related
     if (res.status !== 400) break;
+
     const errorParam = json?.error?.param;
+    const errorCode = json?.error?.code;
     const paramRelated =
       errorParam === "max_tokens" ||
       errorParam === "max_completion_tokens" ||
       errorParam === "temperature" ||
+      errorCode === "invalid_parameter_value" ||
       /max_tokens|max_completion_tokens|temperature/i.test(errorMessage);
+
     if (!paramRelated) break;
   }
 
@@ -162,6 +268,8 @@ async function callAnthropicMessages(args: {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (args.apiKey) headers["x-api-key"] = args.apiKey;
   headers["anthropic-version"] = "2023-06-01";
+  // Add beta header for newer features
+  headers["anthropic-beta"] = "messages-2024-12-16";
 
   const body = JSON.stringify({
     model: args.model,
@@ -171,26 +279,44 @@ async function callAnthropicMessages(args: {
     temperature: args.temperature
   });
 
-  const res = await fetchWithTimeout(url, { method: "POST", headers, body }, 30_000);
+  const res = await fetchWithTimeout(url, { method: "POST", headers, body }, 60_000);
   const text = await res.text();
+
   if (!res.ok) {
-    const err = new Error(`LLM request failed (${res.status}): ${text.slice(0, 500)}`);
+    let errorMessage = text.slice(0, 500);
+    try {
+      const errorJson = JSON.parse(text);
+      if (errorJson?.error?.message) {
+        errorMessage = errorJson.error.message;
+      }
+    } catch {
+      // Use raw text
+    }
+    const err = new Error(`LLM request failed (${res.status}): ${errorMessage}`);
     (err as any).status = res.status;
     throw err;
   }
 
-  const json = JSON.parse(text) as any;
-  const contentBlocks: any[] | undefined = json?.content;
-  const joined = contentBlocks
-    ?.filter((b) => b?.type === "text" && typeof b?.text === "string")
-    .map((b) => b.text)
-    .join("\n");
-  if (!joined) throw new Error("Unexpected Anthropic response format (missing content blocks)");
-  return joined;
+  let json: any;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    throw new Error(`Failed to parse Anthropic response: ${text.slice(0, 200)}`);
+  }
+
+  const content = extractAnthropicContent(json);
+  if (content === null) {
+    console.warn("Anthropic returned 200 but content extraction failed:", JSON.stringify(json).slice(0, 500));
+    throw new Error(`Unexpected Anthropic response format: ${JSON.stringify(json).slice(0, 200)}`);
+  }
+
+  return content;
 }
 
 async function callLlm(provider: ProviderPreset, args: Parameters<typeof callOpenAiChatCompletions>[0]) {
-  if (provider.apiKind === "anthropic-messages") return callAnthropicMessages(args);
+  if (provider.apiKind === "anthropic-messages") {
+    return callAnthropicMessages(args);
+  }
   return callOpenAiChatCompletions(args);
 }
 
@@ -235,8 +361,8 @@ export async function runBenchmark(options: RunBenchmarkOptions): Promise<Benchm
 
   const items: BenchmarkItem[] = [];
   const total = options.promptPack.prompts.length;
-  const maxTokens = options.maxTokens ?? 100;
-  const temperature = options.temperature ?? 0.2;
+  const maxTokens = options.maxTokens ?? 500; // Increased default for better responses
+  const temperature = options.temperature ?? 0.3;
 
   for (let idx = 0; idx < options.promptPack.prompts.length; idx++) {
     const prompt = options.promptPack.prompts[idx]!;
@@ -253,6 +379,8 @@ export async function runBenchmark(options: RunBenchmarkOptions): Promise<Benchm
 
     const startedAt = performance.now();
     let responseText = "";
+    let lastError: Error | null = null;
+
     for (let attempt = 0; attempt < 4; attempt++) {
       try {
         responseText = await callLlm(options.provider, {
@@ -263,15 +391,24 @@ export async function runBenchmark(options: RunBenchmarkOptions): Promise<Benchm
           maxTokens,
           temperature
         });
+        lastError = null;
         break;
       } catch (error) {
+        lastError = error as Error;
         const status = typeof (error as any)?.status === "number" ? (error as any).status : undefined;
         const retryable = status ? isRetryableStatus(status) : false;
-        if (!retryable || attempt === 3) throw error;
-        const backoffMs = 500 * Math.pow(2, attempt);
+
+        if (!retryable || attempt === 3) {
+          // Don't throw - record the error and continue
+          responseText = `[Error: ${lastError.message}]`;
+          break;
+        }
+
+        const backoffMs = 1000 * Math.pow(2, attempt);
         await sleep(backoffMs);
       }
     }
+
     const latencyMs = Math.round(performance.now() - startedAt);
 
     const scored = scorePromptResponse(prompt, responseText);
@@ -281,7 +418,7 @@ export async function runBenchmark(options: RunBenchmarkOptions): Promise<Benchm
       title: prompt.title,
       refused: scored.refused,
       hedging: scored.hedging,
-      score: scored.score,
+      score: lastError ? 0 : scored.score, // Zero score on error
       expectedKeywords: scored.expectedKeywords,
       matchedKeywords: scored.matchedKeywords,
       latencyMs,

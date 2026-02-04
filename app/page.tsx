@@ -1,10 +1,15 @@
 import Link from "next/link";
 
+import { DbStatusButton } from "@/components/DbStatusButton";
+
 export default function HomePage() {
   return (
     <div className="space-y-8">
       <section className="space-y-3">
-        <h1 className="text-3xl font-semibold tracking-tight">Open Cyber LLM Arena</h1>
+        <div className="flex items-center justify-between gap-4">
+          <h1 className="text-3xl font-semibold tracking-tight">Open Cyber LLM Arena</h1>
+          <DbStatusButton />
+        </div>
         <p className="max-w-3xl text-gray-300">
           OCLA is a transparent, crowdsourced benchmarking platform for evaluating Large Language
           Models (LLMs) on cybersecurity tasks. Runs are local-first and can be shared anonymously

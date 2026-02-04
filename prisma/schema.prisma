@@ -4,7 +4,6 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 model BenchmarkRun {
@@ -44,4 +43,3 @@ model BenchmarkRun {
   @@index([createdAt])
   @@index([promptPackId])
 }
-
