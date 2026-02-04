@@ -6,7 +6,7 @@ import toast from "react-hot-toast";
 import { ProviderSelector, type ProviderSelection } from "@/components/ProviderSelector";
 import { PromptPackSelector } from "@/components/PromptPackSelector";
 import { ResultsTable } from "@/components/ResultsTable";
-import { TrustBadge } from "@/components/TrustBadge";
+
 import { runBenchmark } from "@/lib/benchmarkRunner";
 import { DEFAULT_PROMPT_PACKS } from "@/lib/prompts";
 import { PROVIDER_PRESETS } from "@/lib/providers";
@@ -124,14 +124,11 @@ export default function BenchmarkPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">Benchmark</h1>
-          <p className="text-sm text-gray-300">
-            Runs client-side. API keys are never sent to OCLA server routes.
-          </p>
-        </div>
-        <TrustBadge trustLevel={3} reason="Browser execution (highest trust)." />
+      <div className="space-y-1">
+        <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">Benchmark</h1>
+        <p className="text-gray-400">
+          Runs client-side. API keys are never sent to OCLA server routes.
+        </p>
       </div>
 
       <ProviderSelector presets={PROVIDER_PRESETS} value={providerSelection} onChange={setProviderSelection} />

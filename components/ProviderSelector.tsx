@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import toast from "react-hot-toast";
 
 import type { ProviderPreset } from "@/lib/types";
@@ -79,6 +79,7 @@ export function ProviderSelector({
 
   const [loadedModels, setLoadedModels] = useState<LoadedModelsState>({ status: "idle", models: [] });
   const [showModels, setShowModels] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   async function loadModels({ silent }: { silent?: boolean } = {}) {
     if (!modelsUrl) return;
@@ -125,10 +126,24 @@ export function ProviderSelector({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value.apiKey]);
 
+  // Scroll to active provider on mount
+  useEffect(() => {
+    if (scrollRef.current) {
+      const activeEl = scrollRef.current.querySelector('[data-active="true"]');
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+    }
+  }, [value.providerId]);
+
   return (
     <div className="space-y-6">
-      {/* 1. Provider Grid */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Horizontal Scrolling Provider Carousel */}
+      <div
+        ref={scrollRef}
+        className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent"
+        style={{ scrollbarWidth: 'thin' }}
+      >
         {presets.map((p) => {
           const isActive = p.id === value.providerId;
           const Icon = PROVIDER_ICONS[p.id] || IconServer;
@@ -136,6 +151,7 @@ export function ProviderSelector({
           return (
             <button
               key={p.id}
+              data-active={isActive}
               onClick={() => {
                 onChange({
                   ...value,
@@ -144,27 +160,25 @@ export function ProviderSelector({
                   model: p.id === value.providerId ? value.model : p.defaultModel ?? ""
                 });
               }}
-              className={`group relative flex flex-col items-center gap-3 rounded-xl border p-4 transition-all hover:bg-gray-900/50 ${isActive
-                ? "border-green-500/50 bg-green-500/10 ring-1 ring-green-500/20"
-                : "border-gray-800 bg-gray-950/30 hover:border-gray-700"
+              className={`group relative flex shrink-0 flex-col items-center justify-center gap-2 rounded-full border px-6 py-4 transition-all duration-200 ${isActive
+                  ? "border-green-500 bg-green-500/20 shadow-lg shadow-green-900/20"
+                  : "border-gray-800 bg-gray-900/40 hover:border-gray-600 hover:bg-gray-800/60"
                 }`}
             >
-              <Icon className={`h-8 w-8 transition-colors ${isActive ? "text-green-400" : "text-gray-400 group-hover:text-gray-200"}`} />
-              <span className={`text-sm font-medium ${isActive ? "text-green-100" : "text-gray-400 group-hover:text-gray-200"}`}>
+              <div className={`rounded-full p-2 transition-colors ${isActive ? "bg-green-500/30 text-green-400" : "bg-gray-800 text-gray-400 group-hover:text-gray-200"}`}>
+                <Icon className="h-6 w-6" />
+              </div>
+
+              <span className={`text-xs font-semibold whitespace-nowrap ${isActive ? "text-green-300" : "text-gray-400 group-hover:text-gray-200"}`}>
                 {p.name.split(" ")[0]}
               </span>
-              {isActive && (
-                <div className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-[10px] text-black">
-                  ✓
-                </div>
-              )}
             </button>
           );
         })}
       </div>
 
-      {/* 2. Configuration Panel */}
-      <div className="animate-in fade-in slide-in-from-top-2 duration-300 rounded-xl border border-gray-800 bg-gray-950/50 p-6 shadow-2xl">
+      {/* Configuration Panel */}
+      <div className="rounded-xl border border-gray-800 bg-gray-950/50 p-6 shadow-lg">
         <div className="flex flex-col gap-6">
 
           {/* Top Row: API Key & Base URL */}
@@ -172,7 +186,7 @@ export function ProviderSelector({
             {/* API Key */}
             <div className="space-y-2">
               <label className="text-xs font-medium uppercase tracking-wider text-gray-500">
-                API Key <span className="text-gray-600">(Stored locally)</span>
+                API Key
               </label>
               <div className="relative">
                 <input
@@ -183,13 +197,6 @@ export function ProviderSelector({
                   onChange={(e) => onChange({ ...value, apiKey: e.target.value })}
                   autoComplete="off"
                 />
-                <div className="absolute right-3 top-3">
-                  {value.apiKey ? (
-                    <span className="text-xs text-green-500/70">Set</span>
-                  ) : (
-                    <span className="text-xs text-gray-700">Optional</span>
-                  )}
-                </div>
               </div>
             </div>
 
@@ -233,13 +240,13 @@ export function ProviderSelector({
                 onChange={(e) => onChange({ ...value, model: e.target.value })}
                 onFocus={() => setShowModels(true)}
                 onBlur={() => setTimeout(() => setShowModels(false), 200)}
-                placeholder="Required (e.g. gpt-4, llama3)"
+                placeholder="Required (e.g. gpt-4o, llama3)"
               />
 
               {/* Dropdown for models */}
               {showModels && loadedModels.models.length > 0 && (
                 <div className="absolute z-10 mt-2 max-h-60 w-full overflow-y-auto rounded-lg border border-gray-800 bg-gray-900 p-1 shadow-xl">
-                  {loadedModels.models.filter(m => m.includes(value.model)).map((model) => (
+                  {loadedModels.models.filter(m => m.toLowerCase().includes(value.model.toLowerCase())).slice(0, 20).map((model) => (
                     <button
                       key={model}
                       className="w-full rounded-md px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-800 hover:text-white"
@@ -252,8 +259,8 @@ export function ProviderSelector({
                 </div>
               )}
             </div>
-            <p className="text-xs text-gray-500">
-              {preset.browserNotes ?? "Running client-side. Keys never leave your browser."}
+            <p className="text-xs text-gray-600">
+              {preset.browserNotes ?? "Keys are stored locally in your browser."}
             </p>
           </div>
         </div>
