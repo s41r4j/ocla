@@ -102,17 +102,22 @@ async function callOpenAiApi(args: {
     log("API key provided: no");
   }
 
-  // Build request body - simpler approach
+  // Build base request body
   const body: Record<string, unknown> = {
     model: args.model,
-    messages: args.messages,
-    max_tokens: args.maxTokens
+    messages: args.messages
   };
 
   // Only add temperature for models that support it
   const model = args.model.toLowerCase();
   const isReasoningModel = model.startsWith("o1") || model.startsWith("o3") || model.startsWith("o4");
-  if (!isReasoningModel) {
+
+  if (isReasoningModel) {
+    // Reasoning models use max_completion_tokens instead of max_tokens
+    body.max_completion_tokens = args.maxTokens;
+  } else {
+    // Standard models
+    body.max_tokens = args.maxTokens;
     body.temperature = args.temperature;
   }
 
