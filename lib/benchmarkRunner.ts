@@ -108,15 +108,27 @@ async function callOpenAiApi(args: {
     messages: args.messages
   };
 
-  // Only add temperature for models that support it
+  // Determine which token parameter to use
+  // OpenAI is migrating to max_completion_tokens for newer models
   const model = args.model.toLowerCase();
-  const isReasoningModel = model.startsWith("o1") || model.startsWith("o3") || model.startsWith("o4");
+  const needsNewTokenParam =
+    model.startsWith("o1") ||
+    model.startsWith("o3") ||
+    model.startsWith("o4") ||
+    model.includes("gpt-4o") ||      // gpt-4o, gpt-4o-mini, gpt-4o-2024-*
+    model.includes("chatgpt-4o") ||  // chatgpt-4o-latest
+    model.includes("gpt-4-turbo");   // gpt-4-turbo-preview
 
-  if (isReasoningModel) {
-    // Reasoning models use max_completion_tokens instead of max_tokens
+  if (needsNewTokenParam) {
+    // Newer models use max_completion_tokens
     body.max_completion_tokens = args.maxTokens;
+    // Only add temperature for non-reasoning models
+    const isReasoningModel = model.startsWith("o1") || model.startsWith("o3") || model.startsWith("o4");
+    if (!isReasoningModel) {
+      body.temperature = args.temperature;
+    }
   } else {
-    // Standard models
+    // Legacy models use max_tokens
     body.max_tokens = args.maxTokens;
     body.temperature = args.temperature;
   }
