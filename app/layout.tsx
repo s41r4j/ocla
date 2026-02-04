@@ -15,7 +15,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="min-h-screen">
         <div className="mx-auto max-w-5xl px-4 py-6">
           <header className="flex items-center justify-between gap-4 border-b border-gray-800 pb-4">
-            <Link href="/" className="text-xl font-semibold tracking-tight text-gray-100">
+            <Link href="/" className="flex items-center gap-2 text-xl font-semibold tracking-tight text-gray-100">
+              <img src="/logo.svg" alt="OCLA Logo" className="h-8 w-8" />
               OCLA
             </Link>
             <nav className="flex items-center gap-4 text-sm text-gray-300">
