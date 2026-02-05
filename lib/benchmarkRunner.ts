@@ -56,70 +56,74 @@ function isRetryableStatus(status: number) {
 function extractContent(json: any): string | null {
   if (!json) return null;
 
-  // OpenAI format
+  // 1. Check for API errors first
+  if (json.error) {
+    const errorMsg = json.error.message || json.error.code || JSON.stringify(json.error);
+    return `[API Error]: ${errorMsg}`;
+  }
+
+  // 2. OpenAI / Compatible format
   const choice = json.choices?.[0];
-  if (choice?.message?.content) {
-    const content = choice.message.content;
-    // Handle string content (standard format)
-    if (typeof content === "string") {
-      return content;
-    }
-    // Handle array content (newer reasoning models format)
-    if (Array.isArray(content)) {
-      const textParts = content
-        .filter((part: any) => part?.type === "text" && typeof part?.text === "string")
-        .map((part: any) => part.text);
-      if (textParts.length > 0) {
+  if (choice) {
+    // Standard chat completion
+    if (choice.message?.content) {
+      const content = choice.message.content;
+      if (typeof content === "string") return content;
+      // Reasoning models (array of content parts)
+      if (Array.isArray(content)) {
+        const textParts = content
+          .filter((p: any) => p?.type === "text" && typeof p?.text === "string")
+          .map((p: any) => p.text);
         return textParts.join("\n");
       }
-      // Fallback: stringify the array
       return JSON.stringify(content);
     }
-    return JSON.stringify(content);
+
+    // Legacy completion
+    if (typeof choice.text === "string") {
+      return choice.text;
+    }
+
+    // Refusal handling
+    if (choice.message?.refusal) {
+      return `[Refusal]: ${choice.message.refusal}`;
+    }
   }
 
-  // Handle refusal
-  if (choice?.message?.refusal) {
-    return `[Model refused]: ${choice.message.refusal}`;
-  }
+  // 3. Ollama / Other formats
+  if (typeof json.response === "string") return json.response; // Ollama default
+  if (typeof json.answer === "string") return json.answer;     // Some wrappers
+  if (typeof json.generated_text === "string") return json.generated_text; // HuggingFace
 
-  // OpenAI reasoning models may use output_text at top level
-  if (typeof json.output_text === "string") {
-    return json.output_text;
-  }
-
-  // Some newer models return output array at top level
+  // 4. OpenAI reasoning specialized formats
+  if (typeof json.output_text === "string") return json.output_text;
   if (Array.isArray(json.output)) {
+    // ... handling complex output arrays ...
     const textParts = json.output
       .filter((item: any) => item?.type === "message" && item?.content)
       .flatMap((item: any) => {
-        if (typeof item.content === "string") return [item.content];
-        if (Array.isArray(item.content)) {
-          return item.content
-            .filter((c: any) => c?.type === "output_text" || c?.type === "text")
-            .map((c: any) => c.text);
+        // Flatten content
+        const c = item.content;
+        if (typeof c === "string") return [c];
+        if (Array.isArray(c)) {
+          return c.map((p: any) => p.text || JSON.stringify(p));
         }
         return [];
       });
-    if (textParts.length > 0) {
-      return textParts.join("\n");
-    }
+    if (textParts.length > 0) return textParts.join("\n");
   }
 
-  // Anthropic format
+  // 5. Anthropic format
   if (Array.isArray(json.content)) {
     const textParts = json.content
       .filter((b: any) => b?.type === "text" && typeof b?.text === "string")
       .map((b: any) => b.text);
-    if (textParts.length > 0) {
-      return textParts.join("\n");
-    }
+    if (textParts.length > 0) return textParts.join("\n");
   }
 
-  // Last resort: check for any text-like field in choice
-  if (choice?.text && typeof choice.text === "string") {
-    return choice.text;
-  }
+  // 6. Deep fallback - search for any large string
+  // If we really can't find it, the user sees "Failed to extract", so maybe lets try to be helpful
+  // and return the raw JSON if it's small enough, or just error.
 
   return null;
 }
@@ -200,7 +204,8 @@ async function callOpenAiApi(args: {
   const content = extractContent(json);
   if (content === null) {
     log("Failed to extract content from response:", json);
-    throw new Error("Failed to extract content from API response");
+    const snippet = JSON.stringify(json).slice(0, 500);
+    throw new Error(`Failed to extract content. Response snippet: ${snippet}`);
   }
 
   log(`Response content length: ${content.length} chars`);
@@ -266,7 +271,8 @@ async function callAnthropicApi(args: {
   const content = extractContent(json);
   if (content === null) {
     log("Failed to extract content from response:", json);
-    throw new Error("Failed to extract content from API response");
+    const snippet = JSON.stringify(json).slice(0, 500);
+    throw new Error(`Failed to extract content. Response snippet: ${snippet}`);
   }
 
   log(`Response content length: ${content.length} chars`);
