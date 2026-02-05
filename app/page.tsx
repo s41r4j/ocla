@@ -10,15 +10,9 @@ export default function HomePage() {
 
         {/* Hero Section */}
         <section className="space-y-8 text-center max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20 text-green-400 text-xs font-mono tracking-wider mb-4">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            SYSTEM_ONLINE // v2.0.0
-          </div>
 
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-100 to-gray-500">Open Cyber</span>
-            <br />
-            <span className="font-mono text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">LLM_ARENA</span>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 whitespace-nowrap">
+            <span className="font-mono text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">Open Cyber LLM Arena</span>
           </h1>
 
           <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
