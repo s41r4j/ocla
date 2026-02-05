@@ -133,6 +133,7 @@ export default function BenchmarkPage() {
     // Start via Context
     startBenchmark({
       providerId: preset.id,
+      provider: preset,
       baseUrl: providerSelection.baseUrl.trim(),
       model: providerSelection.model.trim(),
       apiKey: providerSelection.apiKey || "",
@@ -219,6 +220,7 @@ export default function BenchmarkPage() {
                   }
                   startBenchmark({
                     providerId: preset.id,
+                    provider: preset,
                     baseUrl: providerSelection.baseUrl.trim(),
                     model: providerSelection.model.trim(),
                     apiKey: providerSelection.apiKey || "",

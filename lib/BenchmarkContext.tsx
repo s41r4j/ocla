@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, useRef, useEffect, ReactNode } from "react";
-import type { BenchmarkSummary, BenchmarkItem } from "@/lib/types";
+import type { BenchmarkSummary, BenchmarkItem, ProviderPreset } from "@/lib/types";
 
 export type BenchmarkStatus = "idle" | "running" | "completed" | "error";
 
@@ -29,6 +29,7 @@ interface BenchmarkContextType {
     state: BenchmarkState;
     startBenchmark: (config: {
         providerId: string;
+        provider: ProviderPreset;
         baseUrl: string;
         model: string;
         apiKey: string;
@@ -89,6 +90,7 @@ export function BenchmarkProvider({ children }: { children: ReactNode }) {
 
     const startBenchmark = useCallback(async (config: {
         providerId: string;
+        provider: ProviderPreset;
         baseUrl: string;
         model: string;
         apiKey: string;
