@@ -10,7 +10,7 @@ import type {
   PromptPack,
   ProviderPreset
 } from "@/lib/types";
-import { scorePromptResponseSync } from "@/lib/scoring";
+import { scorePromptResponse } from "@/lib/scoring";
 import { clamp, getOrCreateUserHash, nowIso, sha256Hex, sleep } from "@/lib/utils";
 
 type LlmMessage = { role: "system" | "user" | "assistant"; content: string };
@@ -405,7 +405,7 @@ export async function runBenchmark(options: RunBenchmarkOptions): Promise<Benchm
     log(`Latency: ${latencyMs}ms, Response length: ${responseText.length}`);
 
     // Score the response
-    const scored = scorePromptResponseSync(prompt, responseText);
+    const scored = await scorePromptResponse(prompt, responseText);
     log(`Score: ${scored.overallScore}, Refused: ${scored.refused}, Keywords: ${scored.matchRatio}`);
 
     // Get expected keywords as strings for backward compatibility

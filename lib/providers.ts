@@ -7,7 +7,7 @@ export const PROVIDER_PRESETS: ProviderPreset[] = [
     name: "OpenAI",
     apiKind: "openai-chat-completions",
     baseUrl: "https://api.openai.com/v1",
-    defaultModel: "gpt-4o-mini",
+    defaultModel: "gpt-4o",
     browserNotes: "Requires API key from platform.openai.com"
   },
   {
