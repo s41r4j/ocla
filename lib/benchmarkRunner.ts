@@ -10,7 +10,7 @@ import type {
   PromptPack,
   ProviderPreset
 } from "@/lib/types";
-import { scorePromptResponse } from "@/lib/scoring";
+import { scorePromptResponseSync } from "@/lib/scoring";
 import { clamp, getOrCreateUserHash, nowIso, sha256Hex, sleep } from "@/lib/utils";
 
 type LlmMessage = { role: "system" | "user" | "assistant"; content: string };
@@ -388,8 +388,13 @@ export async function runBenchmark(options: RunBenchmarkOptions): Promise<Benchm
     log(`Latency: ${latencyMs}ms, Response length: ${responseText.length}`);
 
     // Score the response
-    const scored = scorePromptResponse(prompt, responseText);
-    log(`Score: ${scored.score}, Refused: ${scored.refused}, Keywords: ${scored.matchedKeywords.length}/${scored.expectedKeywords.length}`);
+    const scored = scorePromptResponseSync(prompt, responseText);
+    log(`Score: ${scored.overallScore}, Refused: ${scored.refused}, Keywords: ${scored.matchRatio}`);
+
+    // Get expected keywords as strings for backward compatibility
+    const expectedKeywords = (prompt.expectedKeywords || []).map(kw =>
+      typeof kw === "string" ? kw : kw.word
+    );
 
     items.push({
       promptId: prompt.id,
@@ -397,8 +402,8 @@ export async function runBenchmark(options: RunBenchmarkOptions): Promise<Benchm
       title: prompt.title,
       refused: scored.refused,
       hedging: scored.hedging,
-      score: hadError ? 0 : scored.score,
-      expectedKeywords: scored.expectedKeywords,
+      score: hadError ? 0 : scored.overallScore,
+      expectedKeywords,
       matchedKeywords: scored.matchedKeywords,
       latencyMs,
       responseText

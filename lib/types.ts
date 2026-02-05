@@ -5,7 +5,7 @@ export type Prompt = {
   category: PromptCategory;
   title: string;
   text: string;
-  expectedKeywords?: string[];
+  expectedKeywords?: (string | WeightedKeyword)[];
 };
 
 export type PromptPack = {

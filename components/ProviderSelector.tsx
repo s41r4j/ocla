@@ -97,22 +97,71 @@ export function ProviderSelector({
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
   const [logoErrors, setLogoErrors] = useState<Set<string>>(new Set());
+  const autoScrollRef = useRef<number | null>(null);
+
+  // Edge hover auto-scroll
+  const handleEdgeScroll = useCallback((e: React.MouseEvent) => {
+    if (isDragging || !scrollRef.current) return;
+
+    const container = scrollRef.current;
+    const rect = container.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const containerWidth = rect.width;
+    const edgeZone = 80; // pixels from edge to trigger scroll
+
+    // Clear any existing animation
+    if (autoScrollRef.current) {
+      cancelAnimationFrame(autoScrollRef.current);
+      autoScrollRef.current = null;
+    }
+
+    let scrollSpeed = 0;
+
+    if (mouseX < edgeZone) {
+      // Left edge - scroll left, speed based on proximity
+      scrollSpeed = -((edgeZone - mouseX) / edgeZone) * 8;
+    } else if (mouseX > containerWidth - edgeZone) {
+      // Right edge - scroll right, speed based on proximity
+      scrollSpeed = ((mouseX - (containerWidth - edgeZone)) / edgeZone) * 8;
+    }
+
+    if (scrollSpeed !== 0) {
+      const scroll = () => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollLeft += scrollSpeed;
+          autoScrollRef.current = requestAnimationFrame(scroll);
+        }
+      };
+      autoScrollRef.current = requestAnimationFrame(scroll);
+    }
+  }, [isDragging]);
+
+  const handleMouseLeaveCarousel = useCallback(() => {
+    if (autoScrollRef.current) {
+      cancelAnimationFrame(autoScrollRef.current);
+      autoScrollRef.current = null;
+    }
+  }, []);
 
   // Drag to scroll handlers
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     if (!scrollRef.current) return;
+    handleMouseLeaveCarousel(); // Stop edge scrolling when dragging starts
     setIsDragging(true);
     setStartX(e.pageX - scrollRef.current.offsetLeft);
     setScrollLeft(scrollRef.current.scrollLeft);
-  }, []);
+  }, [handleMouseLeaveCarousel]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isDragging || !scrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - scrollRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    scrollRef.current.scrollLeft = scrollLeft - walk;
-  }, [isDragging, startX, scrollLeft]);
+    if (isDragging && scrollRef.current) {
+      e.preventDefault();
+      const x = e.pageX - scrollRef.current.offsetLeft;
+      const walk = (x - startX) * 2;
+      scrollRef.current.scrollLeft = scrollLeft - walk;
+    } else {
+      handleEdgeScroll(e);
+    }
+  }, [isDragging, startX, scrollLeft, handleEdgeScroll]);
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
@@ -127,6 +176,7 @@ export function ProviderSelector({
       behavior: "smooth"
     });
   }, []);
+
 
   async function loadModels({ silent }: { silent?: boolean } = {}) {
     if (!modelsUrl) return;
@@ -218,7 +268,7 @@ export function ProviderSelector({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={() => { handleMouseUp(); handleMouseLeaveCarousel(); }}
         className={`flex gap-3 overflow-x-auto pb-2 scroll-smooth ${isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
         style={{
           scrollbarWidth: 'none',
@@ -246,13 +296,13 @@ export function ProviderSelector({
                 }
               }}
               className={`group relative flex shrink-0 flex-col items-center justify-center gap-3 rounded-xl border-2 p-4 min-w-[90px] transition-all duration-200 ${isActive
-                  ? "border-green-500 bg-green-500/15 shadow-lg shadow-green-900/20"
-                  : "border-gray-800 bg-gray-900/50 hover:border-gray-600 hover:bg-gray-800/70"
+                ? "border-green-500 bg-green-500/15 shadow-lg shadow-green-900/20"
+                : "border-gray-800 bg-gray-900/50 hover:border-gray-600 hover:bg-gray-800/70"
                 }`}
             >
               <div className={`flex items-center justify-center h-10 w-10 rounded-lg transition-all ${isActive
-                  ? "bg-green-500/20"
-                  : "bg-gray-800/50 group-hover:bg-gray-700/50"
+                ? "bg-green-500/20"
+                : "bg-gray-800/50 group-hover:bg-gray-700/50"
                 }`}>
                 {logoUrl && !hasLogoError ? (
                   <Image
@@ -270,8 +320,8 @@ export function ProviderSelector({
               </div>
 
               <span className={`text-xs font-semibold tracking-tight whitespace-nowrap transition-colors ${isActive
-                  ? "text-green-300"
-                  : "text-gray-500 group-hover:text-gray-300"
+                ? "text-green-300"
+                : "text-gray-500 group-hover:text-gray-300"
                 }`}>
                 {p.name.replace(" (OpenAI-compatible)", "").replace(" (localhost)", "").split(" ")[0]}
               </span>
