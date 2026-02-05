@@ -8,7 +8,7 @@ import { clamp } from "@/lib/utils";
  * 1. Keyword/Regex Matching (Fast, client-side)
  * 2. Rule-Based Heuristics (Deterministic)
  * 3. LLM-as-Judge (Semi-automated, higher accuracy)
- * 4. Semantic Similarity (Optional, requires embeddings)
+ * 4. Semantic Similarity (Jaccard/Keyword Overlap)
  */
 
 // ============================================
@@ -180,6 +180,23 @@ export function assessQuality(responseText: string): QualityMetrics {
 export function assessStealth(responseText: string): number {
   const matches = STEALTH_PATTERNS.filter(p => p.test(responseText)).length;
   return clamp(matches * 20, 0, 100);
+}
+
+// ============================================
+// TECHNIQUE 4: Semantic Similarity (Basic)
+// ============================================
+
+export function calculateSemanticScore(text1: string, text2: string): number {
+  if (!text1 || !text2) return 0;
+
+  const set1 = new Set(normalizeForMatch(text1).split(/\s+/));
+  const set2 = new Set(normalizeForMatch(text2).split(/\s+/));
+
+  const intersection = new Set([...set1].filter(x => set2.has(x)));
+  const union = new Set([...set1, ...set2]);
+
+  // Jaccard similarity coefficient
+  return union.size === 0 ? 0 : (intersection.size / union.size) * 100;
 }
 
 // ============================================
@@ -393,6 +410,9 @@ export interface PromptScoreResult {
   // Stealth metrics (red team only)
   stealthScore?: number;
 
+  // Semantic metrics
+  semanticScore?: number;
+
   // AI Judge results (optional)
   aiJudge?: AIJudgeResult;
 
@@ -426,6 +446,11 @@ export async function scorePromptResponse(
 
   // Technique 2: Stealth scoring (red team only)
   const stealthScore = prompt.category === "red" ? assessStealth(responseText) : undefined;
+
+  // Technique 4: Semantic scoring (Basic Jaccard against prompt text)
+  // In a real scenario, this would compare against a reference answer. 
+  // Here we check overlap with prompt to ensure relevance.
+  const semanticScore = calculateSemanticScore(prompt.text, responseText);
 
   // Technique 3: AI Judge (optional)
   let aiJudge: AIJudgeResult | undefined;
@@ -500,6 +525,7 @@ export async function scorePromptResponse(
     matchRatio: keywordResult.matchRatio,
     qualityMetrics,
     stealthScore,
+    semanticScore,
     aiJudge,
     successScore: clamp(successScore, 0, 100),
     qualityScore: clamp(qualityScore, 0, 100),

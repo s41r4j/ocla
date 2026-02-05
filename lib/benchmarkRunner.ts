@@ -387,7 +387,30 @@ export async function runBenchmark(options: RunBenchmarkOptions): Promise<Benchm
         log(`Attempt ${attempt + 1} failed: ${err.message}`);
 
         const status = (error as any)?.status as number | undefined;
-        const isRetryable = status ? isRetryableStatus(status) : false;
+        let isRetryable = false;
+
+        // 1. Network errors (Failed to fetch) -> Retry
+        if (err.message.includes("fetch") || err.name === 'TypeError' || !status) {
+          isRetryable = true;
+        }
+
+        // 2. Retryable Status Codes (429, 5xx)
+        if (status && isRetryableStatus(status)) {
+          isRetryable = true;
+        }
+
+        // 3. Status Extraction from Message (if status prop missing)
+        // message format: "API error (400): ..."
+        if (err.message.includes("(4")) {
+          // It's a 4xx error. Assume non-retryable unless 429.
+          isRetryable = false;
+          if (err.message.includes("(429)") || err.message.includes("(408)")) {
+            isRetryable = true;
+          }
+        }
+        if (err.message.includes("(5")) {
+          isRetryable = true;
+        }
 
         if (!isRetryable || attempt === 2) {
           responseText = `[Error: ${err.message}]`;
