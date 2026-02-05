@@ -2,7 +2,27 @@
 
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import toast from "react-hot-toast";
-import Image from "next/image";
+import {
+  SiOpenai,
+  SiAnthropic,
+  SiGooglegemini,
+  SiPerplexity,
+  SiX,
+  SiOllama,
+  SiNvidia
+} from "react-icons/si";
+import {
+  Zap,
+  Users,
+  Flame,
+  Network,
+  Brain,
+  Layers,
+  Monitor,
+  Settings2,
+  Cpu,
+  Wind
+} from "lucide-react";
 
 import type { ProviderPreset } from "@/lib/types";
 
@@ -42,36 +62,27 @@ function parseModelIds(json: any): string[] {
   return [];
 }
 
-// Provider logos using Simple Icons CDN (real brand logos)
-const PROVIDER_LOGOS: Record<string, string> = {
-  openai: "https://cdn.simpleicons.org/openai/white",
-  anthropic: "https://cdn.simpleicons.org/anthropic/white",
-  gemini: "https://cdn.simpleicons.org/googlegemini/white",
-  mistral: "https://cdn.simpleicons.org/mistral/white",
-  groq: "https://cdn.simpleicons.org/groq/white",
-  together: "https://cdn.simpleicons.org/togethercompute/white",
-  fireworks: "https://cdn.simpleicons.org/fireship/white",
-  openrouter: "https://cdn.simpleicons.org/openai/white",
-  perplexity: "https://cdn.simpleicons.org/perplexity/white",
-  deepseek: "https://cdn.simpleicons.org/deepseek/white",
-  cohere: "https://cdn.simpleicons.org/cohere/white",
-  xai: "https://cdn.simpleicons.org/x/white",
-  ollama: "https://cdn.simpleicons.org/ollama/white",
-  lmstudio: "https://cdn.simpleicons.org/intel/white",
-  custom: "https://cdn.simpleicons.org/serverless/white"
+// Map provider IDs to React components
+const PROVIDER_ICONS: Record<string, React.ElementType> = {
+  openai: SiOpenai,
+  anthropic: SiAnthropic,
+  gemini: SiGooglegemini,
+  mistral: Wind, // Mistral = Wind
+  groq: Zap, // Groq = Fast
+  together: Users, // Together = Users/Handshake
+  fireworks: Flame,
+  openrouter: Network,
+  perplexity: SiPerplexity,
+  deepseek: Brain,
+  cohere: Layers, // Cohere = Layers/Embeddings
+  xai: SiX,
+  ollama: SiOllama,
+  lmstudio: Monitor,
+  custom: Settings2
 };
 
-// Fallback SVG icon
-function FallbackIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-      <rect width="20" height="8" x="2" y="2" rx="2" />
-      <rect width="20" height="8" x="2" y="14" rx="2" />
-      <circle cx="6" cy="6" r="1" />
-      <circle cx="6" cy="18" r="1" />
-    </svg>
-  );
-}
+// Fallback icon if ID missing
+const DefaultIcon = Cpu;
 
 export function ProviderSelector({
   presets,
@@ -96,7 +107,6 @@ export function ProviderSelector({
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
-  const [logoErrors, setLogoErrors] = useState<Set<string>>(new Set());
   const autoScrollRef = useRef<number | null>(null);
 
   // Edge hover auto-scroll
@@ -233,6 +243,8 @@ export function ProviderSelector({
     }
   }, []);
 
+  const ActiveIcon = PROVIDER_ICONS[preset.id] || DefaultIcon;
+
   return (
     <div className="space-y-5">
       {/* Header with navigation */}
@@ -242,7 +254,7 @@ export function ProviderSelector({
           <button
             onClick={() => scrollToDirection("left")}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-700 bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white transition-all"
-            type="button"
+            type="button" // Add explicit type
             aria-label="Scroll left"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -252,7 +264,7 @@ export function ProviderSelector({
           <button
             onClick={() => scrollToDirection("right")}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-gray-700 bg-gray-900 text-gray-400 hover:bg-gray-800 hover:text-white transition-all"
-            type="button"
+            type="button" // Add explicit type
             aria-label="Scroll right"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -278,8 +290,7 @@ export function ProviderSelector({
       >
         {presets.map((p) => {
           const isActive = p.id === value.providerId;
-          const logoUrl = PROVIDER_LOGOS[p.id];
-          const hasLogoError = logoErrors.has(p.id);
+          const Icon = PROVIDER_ICONS[p.id] || DefaultIcon;
 
           return (
             <button
@@ -304,19 +315,7 @@ export function ProviderSelector({
                 ? "bg-green-500/20"
                 : "bg-gray-800/50 group-hover:bg-gray-700/50"
                 }`}>
-                {logoUrl && !hasLogoError ? (
-                  <Image
-                    src={logoUrl}
-                    alt={p.name}
-                    width={24}
-                    height={24}
-                    className="h-6 w-6"
-                    onError={() => setLogoErrors(prev => new Set(prev).add(p.id))}
-                    unoptimized
-                  />
-                ) : (
-                  <FallbackIcon className={`h-6 w-6 ${isActive ? "text-green-400" : "text-gray-500 group-hover:text-gray-300"}`} />
-                )}
+                <Icon className={`h-6 w-6 ${isActive ? "text-green-400" : "text-gray-500 group-hover:text-gray-300"}`} />
               </div>
 
               <span className={`text-xs font-semibold tracking-tight whitespace-nowrap transition-colors ${isActive
@@ -340,19 +339,7 @@ export function ProviderSelector({
       <div className="rounded-xl border border-gray-800 bg-gray-950/70 p-5 shadow-lg">
         <div className="mb-4 flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-500/20">
-            {PROVIDER_LOGOS[preset.id] && !logoErrors.has(preset.id) ? (
-              <Image
-                src={PROVIDER_LOGOS[preset.id]}
-                alt={preset.name}
-                width={20}
-                height={20}
-                className="h-5 w-5"
-                onError={() => setLogoErrors(prev => new Set(prev).add(preset.id))}
-                unoptimized
-              />
-            ) : (
-              <FallbackIcon className="h-5 w-5 text-green-400" />
-            )}
+            <ActiveIcon className="h-5 w-5 text-green-400" />
           </div>
           <span className="font-semibold text-gray-200">{preset.name}</span>
         </div>
