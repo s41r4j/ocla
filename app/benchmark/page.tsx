@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import toast from "react-hot-toast";
 
 import { ProviderSelector, type ProviderSelection } from "@/components/ProviderSelector";
 import { PromptPackSelector } from "@/components/PromptPackSelector";
 import { ResultsTable } from "@/components/ResultsTable";
 
-import { runBenchmark } from "@/lib/benchmarkRunner";
+import { runBenchmarkItem, summarize } from "@/lib/benchmarkRunner";
+import { useBenchmark } from "@/lib/BenchmarkContext";
 import { DEFAULT_PROMPT_PACKS } from "@/lib/prompts";
 import { PROVIDER_PRESETS } from "@/lib/providers";
 import type { BenchmarkRun } from "@/lib/types";
-import { downloadTextFile } from "@/lib/utils";
+import { downloadTextFile, getOrCreateUserHash, nowIso, sha256Hex } from "@/lib/utils";
 
 function toCsv(run: BenchmarkRun) {
   const header = ["prompt_id", "category", "title", "score", "refused", "latency_ms"].join(",");
@@ -34,8 +35,11 @@ function sharePayload(run: BenchmarkRun) {
 }
 
 export default function BenchmarkPage() {
+  const { state, startBenchmark, cancelBenchmark } = useBenchmark();
+
+  // Default to OpenAI (gpt-4o)
   const [providerSelection, setProviderSelection] = useState<ProviderSelection>(() => {
-    const preset = PROVIDER_PRESETS.find((p) => p.id === "ollama") ?? PROVIDER_PRESETS[0]!;
+    const preset = PROVIDER_PRESETS.find((p) => p.id === "openai") ?? PROVIDER_PRESETS[0]!;
     return {
       providerId: preset.id,
       baseUrl: preset.baseUrl,
@@ -43,14 +47,25 @@ export default function BenchmarkPage() {
       apiKey: ""
     };
   });
+
   const [promptPack, setPromptPack] = useState(DEFAULT_PROMPT_PACKS[0]!);
-  const [isRunning, setIsRunning] = useState(false);
-  const [progress, setProgress] = useState<{ completed: number; total: number; label: string } | null>(null);
-  const [run, setRun] = useState<BenchmarkRun | null>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [dbEnabled, setDbEnabled] = useState<boolean | null>(null);
 
   const preset = PROVIDER_PRESETS.find((p) => p.id === providerSelection.providerId) ?? PROVIDER_PRESETS[0]!;
+
+  // Sync state from context if resuming
+  useEffect(() => {
+    if (state.config && state.status !== "idle") {
+      setProviderSelection(prev => ({
+        ...prev,
+        providerId: state.config!.providerId,
+        baseUrl: state.config!.baseUrl,
+        model: state.config!.model,
+        apiKey: state.config!.apiKey // Restore key if saved? Context saves it.
+      }));
+    }
+  }, [state.config, state.status]);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,6 +85,41 @@ export default function BenchmarkPage() {
     };
   }, []);
 
+  // Reconstruct BenchmarkRun object from context state
+  // We need to async calculate hashes/ids to make it a valid run object
+  const [run, setRun] = useState<BenchmarkRun | null>(null);
+
+  useEffect(() => {
+    if (state.results.length === 0) {
+      setRun(null);
+      return;
+    }
+
+    const summary = summarize(state.results);
+
+    // We construct a partial run object synchronously for UI
+    // For specific fields like hashes, we might need to recalculate or store them in context
+    // For now, we generate ad-hoc for display
+    const mockRun: BenchmarkRun = {
+      runId: "restored_" + (state.startedAt || Date.now()),
+      createdAt: new Date(state.startedAt || Date.now()).toISOString(),
+      execution: "browser",
+      trustLevel: 3,
+      trustReason: "In-browser execution",
+      providerId: state.config?.providerId || providerSelection.providerId,
+      baseUrl: state.config?.baseUrl || providerSelection.baseUrl,
+      model: state.config?.model || providerSelection.model,
+      promptPackId: promptPack.id, // Assumption
+      promptPackSha256: "unknown", // Would need async calc
+      buildSha: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
+      userHash: "local",
+      summary,
+      items: state.results
+    };
+
+    setRun(mockRun);
+  }, [state.results, state.config, state.startedAt, providerSelection, promptPack.id]);
+
   async function onRun() {
     if (!providerSelection.baseUrl.trim()) {
       toast.error("Base URL is required.");
@@ -79,38 +129,38 @@ export default function BenchmarkPage() {
       toast.error("Model is required.");
       return;
     }
-    setIsRunning(true);
-    setRun(null);
-    setProgress({ completed: 0, total: promptPack.prompts.length, label: "Starting…" });
 
-    try {
-      const result = await runBenchmark({
-        provider: preset,
-        baseUrl: providerSelection.baseUrl.trim(),
-        model: providerSelection.model.trim(),
-        apiKey: providerSelection.apiKey || undefined,
-        promptPack,
-        onProgress: ({ completed, total, prompt }) =>
-          setProgress({ completed, total, label: `${prompt.category.toUpperCase()}: ${prompt.title}` })
-      });
-      setRun(result);
-      toast.success("Benchmark complete.");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Benchmark failed.");
-    } finally {
-      setIsRunning(false);
-      setProgress(null);
-    }
+    // Start via Context
+    startBenchmark({
+      providerId: preset.id,
+      baseUrl: providerSelection.baseUrl.trim(),
+      model: providerSelection.model.trim(),
+      apiKey: providerSelection.apiKey || "",
+      prompts: promptPack.prompts,
+      runFn: runBenchmarkItem, // Pass the singe-item runner
+      onComplete: () => {
+        toast.success("Benchmark complete.");
+      }
+    });
   }
 
   async function onShare() {
     if (!run) return;
     setIsSharing(true);
     try {
+      // Re-calculate robust values for sharing
+      const promptPackSha256 = await sha256Hex(JSON.stringify(promptPack));
+      const finalRun: BenchmarkRun = {
+        ...run,
+        promptPackId: promptPack.id,
+        promptPackSha256,
+        userHash: getOrCreateUserHash()
+      };
+
       const res = await fetch("/api/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sharePayload(run))
+        body: JSON.stringify(sharePayload(finalRun))
       });
       const text = await res.text();
       if (!res.ok) throw new Error(text || `Upload failed (${res.status})`);
@@ -121,6 +171,13 @@ export default function BenchmarkPage() {
       setIsSharing(false);
     }
   }
+
+  const isRunning = state.status === "running";
+  const progress = isRunning && state.progress.total > 0 ? {
+    completed: state.progress.current,
+    total: state.progress.total,
+    label: state.progress.currentPrompt || "Processing..."
+  } : null;
 
   return (
     <div className="space-y-6">
@@ -142,16 +199,53 @@ export default function BenchmarkPage() {
       ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          className="rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-black hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-60"
-          onClick={onRun}
-          disabled={isRunning}
-          type="button"
-        >
-          {isRunning ? "Running…" : "Run benchmark"}
-        </button>
+        {isRunning ? (
+          <button
+            className="rounded-md bg-red-500/10 border border-red-500/50 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-500/20"
+            onClick={cancelBenchmark}
+            type="button"
+          >
+            Stop Benchmark
+          </button>
+        ) : (
+          <div className="flex gap-2">
+            {state.results.length > 0 && state.status !== "completed" && (
+              <button
+                className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-400"
+                onClick={() => {
+                  if (!providerSelection.baseUrl.trim() || !providerSelection.model.trim()) {
+                    toast.error("Configure provider to resume");
+                    return;
+                  }
+                  startBenchmark({
+                    providerId: preset.id,
+                    baseUrl: providerSelection.baseUrl.trim(),
+                    model: providerSelection.model.trim(),
+                    apiKey: providerSelection.apiKey || "",
+                    prompts: promptPack.prompts,
+                    runFn: runBenchmarkItem,
+                    onComplete: () => toast.success("Benchmark complete."),
+                    resume: true
+                  });
+                }}
+                type="button"
+              >
+                Resume Run ({state.results.length}/{state.progress.total || promptPack.prompts.length})
+              </button>
+            )}
 
-        {run ? (
+            <button
+              className="rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-black hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-60"
+              onClick={onRun}
+              disabled={isRunning}
+              type="button"
+            >
+              {state.status === "completed" ? "Run again" : (state.results.length > 0 ? "Restart (Clear)" : "Run benchmark")}
+            </button>
+          </div>
+        )}
+
+        {run && state.results.length > 0 ? (
           <>
             <button
               className="rounded-md border border-gray-800 bg-gray-950 px-4 py-2 text-sm font-medium text-gray-100 hover:bg-gray-900"
@@ -210,7 +304,7 @@ export default function BenchmarkPage() {
         </div>
       ) : null}
 
-      {run ? (
+      {run && run.summary ? (
         <div className="space-y-3">
           <div className="grid gap-3 md:grid-cols-3">
             <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4">
