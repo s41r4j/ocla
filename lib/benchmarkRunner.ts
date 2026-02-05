@@ -79,6 +79,11 @@ function extractContent(json: any): string | null {
       return JSON.stringify(content);
     }
 
+    // Handle Token Limit / Length finish logic
+    if (choice.finish_reason === "length" && !choice.text) {
+      return "[Error: Model output limit reached (max tokens). Try increasing the limit.]";
+    }
+
     // Legacy completion
     if (typeof choice.text === "string") {
       return choice.text;
@@ -336,10 +341,16 @@ export async function runBenchmark(options: RunBenchmarkOptions): Promise<Benchm
 
   const items: BenchmarkItem[] = [];
   const total = options.promptPack.prompts.length;
-  const maxTokens = options.maxTokens ?? 1024; // Good default for detailed responses
+  const maxTokens = options.maxTokens ?? 4096; // Increased default for reasoning models
   const temperature = options.temperature ?? 0.7;
 
   for (let idx = 0; idx < options.promptPack.prompts.length; idx++) {
+    // Add random jitter to avoid rate limits (1s - 3s)
+    if (idx > 0) {
+      const jitterMs = 1000 + Math.random() * 2000;
+      await sleep(jitterMs);
+    }
+
     const prompt = options.promptPack.prompts[idx]!;
     log(`--- Prompt ${idx + 1}/${total}: ${prompt.title} ---`);
     options.onProgress?.({ completed: idx, total, prompt });
