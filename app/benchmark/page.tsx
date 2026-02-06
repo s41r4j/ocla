@@ -130,6 +130,12 @@ export default function BenchmarkPage() {
       return;
     }
 
+    // API Key check (skip for local providers)
+    if (!providerSelection.apiKey && !["ollama", "lmstudio", "custom"].includes(preset.id)) {
+      toast.error(`API Key is required for ${preset.name}`);
+      return;
+    }
+
     // Start via Context
     startBenchmark({
       providerId: preset.id,

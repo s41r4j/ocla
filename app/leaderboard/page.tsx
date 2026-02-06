@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
+import { Terminal, Shield, Database, Activity, Server, Hash } from "lucide-react";
 
 type LeaderboardRow = {
   model: string;
