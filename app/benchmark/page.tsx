@@ -205,174 +205,210 @@ export default function BenchmarkPage() {
     label: state.progress.currentPrompt || "Processing..."
   } : null;
 
+  // ... imports and previous code ...
+
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">Benchmark</h1>
-        <p className="text-gray-400">
-          Runs client-side. API keys are never sent to OCLA server routes.
-        </p>
-      </div>
+    <div className="relative min-h-screen py-12">
+      {/* Background Grid */}
+      <div className="absolute inset-0 z-0 pointer-events-none bg-grid-pattern [mask-image:linear-gradient(to_bottom,white,transparent)]" />
 
-      <ProviderSelector presets={PROVIDER_PRESETS} value={providerSelection} onChange={setProviderSelection} />
-      <PromptPackSelector packs={DEFAULT_PROMPT_PACKS} value={promptPack} onChange={setPromptPack} />
-
-      {dbEnabled === false ? (
-        <div className="rounded-lg border border-yellow-900/60 bg-yellow-950/30 p-4 text-sm text-yellow-100/90">
-          Uploads/leaderboard are disabled (missing <span className="font-mono">DATABASE_URL</span>).
-          Your results stay local unless you configure Postgres.
+      <div className="relative z-10 mx-auto max-w-7xl px-6 space-y-10">
+        <div className="space-y-2 border-b border-white/10 pb-8">
+          <h1 className="text-4xl font-bold tracking-tight">
+            <span className="font-mono text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">
+              Benchmark Terminal
+            </span>
+          </h1>
+          <p className="text-xl text-gray-400 max-w-2xl leading-relaxed">
+            Client-side evaluation. API keys remain local.
+          </p>
         </div>
-      ) : null}
 
-      <div className="flex flex-wrap items-center gap-3">
-        {isRunning ? (
-          <button
-            className="rounded-md bg-red-500/10 border border-red-500/50 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-500/20"
-            onClick={cancelBenchmark}
-            type="button"
-          >
-            Stop Benchmark
-          </button>
-        ) : (
-          <div className="flex gap-2">
-            {state.results.length > 0 && state.status !== "completed" && (
-              <button
-                className="rounded-md bg-blue-500 px-4 py-2 text-sm font-medium text-white hover:bg-blue-400"
-                onClick={() => {
-                  if (!providerSelection.baseUrl.trim() || !providerSelection.model.trim()) {
-                    toast.error("Configure provider to resume");
-                    return;
-                  }
-                  startBenchmark({
-                    providerId: preset.id,
-                    provider: preset,
-                    baseUrl: providerSelection.baseUrl.trim(),
-                    model: providerSelection.model.trim(),
-                    apiKey: providerSelection.apiKey || "",
-                    prompts: promptPack.prompts,
-                    runFn: runBenchmarkItem,
-                    onComplete: handleBenchmarkComplete,
-                    resume: true
-                  });
-                }}
-                type="button"
-              >
-                Resume Run ({state.results.length}/{state.progress.total || promptPack.prompts.length})
-              </button>
+        <div className="grid gap-8 lg:grid-cols-3">
+          {/* Left Column: Configuration */}
+          <div className="space-y-6 lg:col-span-1">
+            <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6 space-y-6">
+              <h3 className="font-bold text-gray-200 text-sm uppercase tracking-wider font-mono border-b border-white/5 pb-2 mb-4">
+                Configuration
+              </h3>
+              <ProviderSelector presets={PROVIDER_PRESETS} value={providerSelection} onChange={setProviderSelection} />
+              <PromptPackSelector packs={DEFAULT_PROMPT_PACKS} value={promptPack} onChange={setPromptPack} />
+            </div>
+
+            {dbEnabled === false && (
+              <div className="rounded-xl border border-yellow-500/20 bg-yellow-950/20 p-4 text-sm text-yellow-200/80 font-mono">
+                [WARN]: Database disconnected. Results are local-only.
+              </div>
             )}
 
-            {state.status === "completed" || state.results.length > 0 ? (
-              <>
-                <button
-                  className="rounded-md bg-red-500/10 border border-red-500/50 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-500/20"
-                  onClick={resetState}
-                  disabled={isRunning}
-                  type="button"
-                >
-                  Clear Results
-                </button>
-                <button
-                  className="rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-black hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-60"
-                  onClick={onRun}
-                  disabled={isRunning}
-                  type="button"
-                >
-                  Run Again
-                </button>
-              </>
-            ) : (
-              <button
-                className="rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-black hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-60"
-                onClick={onRun}
-                disabled={isRunning}
-                type="button"
-              >
-                Run Benchmark
-              </button>
-            )}
-          </div>
-        )}
+            <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6">
+              <h3 className="font-bold text-gray-200 text-sm uppercase tracking-wider font-mono border-b border-white/5 pb-2 mb-4">
+                Control_Panel
+              </h3>
+              <div className="flex flex-col gap-3">
+                {isRunning ? (
+                  <button
+                    className="w-full rounded-lg bg-red-500/10 border border-red-500/50 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all"
+                    onClick={cancelBenchmark}
+                    type="button"
+                  >
+                    ABORT_BENCHMARK
+                  </button>
+                ) : (
+                  <>
+                    {state.results.length > 0 && state.status !== "completed" && (
+                      <button
+                        className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-500 font-mono shadow-lg shadow-blue-900/20 transition-all"
+                        onClick={() => {
+                          if (!providerSelection.baseUrl.trim() || !providerSelection.model.trim()) {
+                            toast.error("Configure provider to resume");
+                            return;
+                          }
+                          startBenchmark({
+                            providerId: preset.id,
+                            provider: preset,
+                            baseUrl: providerSelection.baseUrl.trim(),
+                            model: providerSelection.model.trim(),
+                            apiKey: providerSelection.apiKey || "",
+                            prompts: promptPack.prompts,
+                            runFn: runBenchmarkItem,
+                            onComplete: handleBenchmarkComplete,
+                            resume: true
+                          });
+                        }}
+                        type="button"
+                      >
+                        RESUME_RUN ({state.results.length}/{state.progress.total || promptPack.prompts.length})
+                      </button>
+                    )}
 
-        {run && state.results.length > 0 ? (
-          <>
-            <button
-              className="rounded-md border border-gray-800 bg-gray-950 px-4 py-2 text-sm font-medium text-gray-100 hover:bg-gray-900"
-              onClick={() =>
-                downloadTextFile(
-                  `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.json`,
-                  JSON.stringify(run, null, 2)
-                )
-              }
-              type="button"
-            >
-              Download JSON
-            </button>
-            <button
-              className="rounded-md border border-gray-800 bg-gray-950 px-4 py-2 text-sm font-medium text-gray-100 hover:bg-gray-900"
-              onClick={() =>
-                downloadTextFile(
-                  `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.csv`,
-                  toCsv(run),
-                  "text/csv"
-                )
-              }
-              type="button"
-            >
-              Download CSV
-            </button>
-
-          </>
-        ) : null}
-      </div>
-
-      {progress ? (
-        <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4">
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <div className="text-gray-200">{progress.label}</div>
-            <div className="font-mono text-gray-400">
-              {progress.completed}/{progress.total}
-            </div>
-          </div>
-          <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-gray-900">
-            <div
-              className="h-full bg-green-500 transition-[width]"
-              style={{
-                width: `${Math.round((progress.completed / Math.max(1, progress.total)) * 100)}%`
-              }}
-            />
-          </div>
-        </div>
-      ) : null}
-
-      {run && run.summary ? (
-        <div className="space-y-3">
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4">
-              <div className="text-xs text-gray-400">Overall avg score</div>
-              <div className="mt-1 text-2xl font-semibold">{run.summary.totals.avgScore}</div>
-            </div>
-            <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4">
-              <div className="text-xs text-gray-400">Overall refusal rate</div>
-              <div className="mt-1 text-2xl font-semibold">
-                {Math.round(run.summary.totals.refusalRate * 100)}%
+                    {state.status === "completed" || state.results.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          className="rounded-lg bg-green-500 px-4 py-3 text-sm font-bold text-gray-950 hover:bg-green-400 font-mono shadow-lg shadow-green-900/20 transition-all"
+                          onClick={onRun}
+                          disabled={isRunning}
+                          type="button"
+                        >
+                          RERUN
+                        </button>
+                        <button
+                          className="rounded-lg bg-red-500/10 border border-red-500/50 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all"
+                          onClick={resetState}
+                          disabled={isRunning}
+                          type="button"
+                        >
+                          CLEAR
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        className="w-full rounded-lg bg-green-500 px-4 py-3 text-sm font-bold text-gray-950 hover:bg-green-400 font-mono shadow-lg shadow-green-900/20 transition-all"
+                        onClick={onRun}
+                        disabled={isRunning}
+                        type="button"
+                      >
+                        INITIATE_BENCHMARK
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             </div>
-            <div className="rounded-lg border border-gray-800 bg-gray-950/40 p-4">
-              <div className="text-xs text-gray-400">Prompts</div>
-              <div className="mt-1 text-2xl font-semibold">{run.summary.totals.promptCount}</div>
-            </div>
+
+            {run && state.results.length > 0 && (
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  className="rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-2 text-xs font-mono text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                  onClick={() =>
+                    downloadTextFile(
+                      `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.json`,
+                      JSON.stringify(run, null, 2)
+                    )
+                  }
+                  type="button"
+                >
+                  DOWNLOAD_JSON
+                </button>
+                <button
+                  className="rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-2 text-xs font-mono text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                  onClick={() =>
+                    downloadTextFile(
+                      `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.csv`,
+                      toCsv(run),
+                      "text/csv"
+                    )
+                  }
+                  type="button"
+                >
+                  DOWNLOAD_CSV
+                </button>
+              </div>
+            )}
           </div>
 
-          <ResultsTable items={run.items} />
-        </div>
-      ) : null}
+          {/* Right Column: Results & Progress */}
+          <div className="space-y-6 lg:col-span-2">
+            {progress ? (
+              <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6">
+                <div className="flex items-center justify-between gap-3 text-sm mb-3">
+                  <div className="text-gray-200 font-mono">{progress.label}</div>
+                  <div className="font-mono text-green-400 font-bold">
+                    {progress.completed}/{progress.total}
+                  </div>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-800">
+                  <div
+                    className="h-full bg-green-500 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                    style={{
+                      width: `${Math.round((progress.completed / Math.max(1, progress.total)) * 100)}%`
+                    }}
+                  />
+                </div>
+              </div>
+            ) : null}
 
-      <div className="rounded-lg border border-yellow-900/60 bg-yellow-950/30 p-4 text-sm text-yellow-100/90">
-        <div className="font-medium text-yellow-200">CORS note</div>
-        <p className="mt-1">
-          Some hosted providers block browser requests. For local models (Ollama / LM Studio), enable
-          CORS on your server.
-        </p>
+            {run && run.summary ? (
+              <div className="space-y-6">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {[
+                    { label: "Avg Score", value: run.summary.totals.avgScore, color: "text-green-400" },
+                    { label: "Refusal Rate", value: `${Math.round(run.summary.totals.refusalRate * 100)}%`, color: "text-red-400" },
+                    { label: "Prompts", value: run.summary.totals.promptCount, color: "text-blue-400" }
+                  ].map((stat, i) => (
+                    <div key={i} className="rounded-xl border border-white/10 bg-gray-900/40 p-4 backdrop-blur-md">
+                      <div className="text-xs text-gray-500 font-mono uppercase tracking-wider">{stat.label}</div>
+                      <div className={`mt-1 text-3xl font-bold font-mono ${stat.color}`}>{stat.value}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md overflow-hidden">
+                  <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between bg-white/5">
+                    <h3 className="font-bold text-gray-200 font-mono text-sm uppercase tracking-wider">
+                      Live_Results
+                    </h3>
+                  </div>
+                  <ResultsTable items={run.items} />
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-gray-900/20 backdrop-blur-sm p-12 text-center h-[400px]">
+                <div className="h-16 w-16 rounded-full bg-gray-800/50 flex items-center justify-center mb-4">
+                  <svg className="w-8 h-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-gray-300 font-bold mb-2">Ready to Benchmark</h3>
+                <p className="text-gray-500 max-w-sm">
+                  Select your provider and prompt pack from the configuration panel to begin the evaluation.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

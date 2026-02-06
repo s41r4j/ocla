@@ -11,8 +11,9 @@ export default function HomePage() {
         {/* Hero Section */}
         <section className="space-y-8 text-center max-w-4xl mx-auto">
 
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 whitespace-nowrap">
-            <span className="font-mono text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">Open Cyber LLM Arena</span>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
+            <span className="font-mono text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 block md:inline">Open Cyber</span>
+            <span className="font-mono text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 block md:inline md:ml-4">LLM Arena</span>
           </h1>
 
           <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed">
