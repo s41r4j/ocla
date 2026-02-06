@@ -53,8 +53,24 @@ export function BenchmarkDetailsModal({
                     </div>
 
                     <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 h-[60vh]">
-                        {/* Left Col: Prompt & Response */}
                         <div className="flex flex-col gap-4 h-full overflow-hidden">
+                            {/* Adversarial Prompt Display */}
+                            {item.adversarialPrompt && (
+                                <div className="shrink-0 max-h-[150px] overflow-hidden flex flex-col rounded-lg border border-red-900/30 bg-red-950/10">
+                                    <div className="flex items-center justify-between px-4 py-2 bg-red-950/20 border-b border-red-900/30">
+                                        <span className="text-xs font-bold text-red-400 uppercase tracking-wider flex items-center gap-2">
+                                            <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+                                            Adversarial Attack ({item.strategyId})
+                                        </span>
+                                    </div>
+                                    <div className="overflow-auto p-3">
+                                        <pre className="text-xs text-red-200/80 whitespace-pre-wrap font-mono">
+                                            {item.adversarialPrompt}
+                                        </pre>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex-1 overflow-hidden flex flex-col rounded-lg border border-gray-800 bg-gray-900/30">
                                 <div className="flex items-center justify-between px-4 py-2 bg-gray-900/50 border-b border-gray-800">
                                     <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Response</span>

@@ -48,6 +48,10 @@ export type BenchmarkItem = {
   t2_quality: number;    // Heuristic quality score
   t3_judge?: number;     // AI Judge score (opt)
   t4_semantic?: number;  // Semantic similarity score (opt)
+
+  // Red Teaming Metadata
+  strategyId?: string;       // ID of the attack strategy used
+  adversarialPrompt?: string; // The actual transformed text sent to the LLM
 };
 
 export type CategorySummary = {
