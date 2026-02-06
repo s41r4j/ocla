@@ -36,8 +36,8 @@ export function BenchmarkDetailsModal({
                             </Dialog.Title>
                             <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
                                 <span className={`px-2 py-0.5 rounded text-xs font-medium uppercase ${item.category === 'red' ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                                        item.category === 'blue' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
-                                            'bg-purple-500/10 text-purple-500 border border-purple-500/20'
+                                    item.category === 'blue' ? 'bg-blue-500/10 text-blue-500 border border-blue-500/20' :
+                                        'bg-purple-500/10 text-purple-500 border border-purple-500/20'
                                     }`}>
                                     {item.category}
                                 </span>
@@ -82,7 +82,7 @@ export function BenchmarkDetailsModal({
                                 <div className="col-span-2 rounded-lg border border-gray-800 bg-gray-900/30 p-4">
                                     <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Overall Score</div>
                                     <div className={`text-4xl font-bold ${item.score > 80 ? 'text-green-400' :
-                                            item.score > 50 ? 'text-yellow-400' : 'text-red-400'
+                                        item.score > 50 ? 'text-yellow-400' : 'text-red-400'
                                         }`}>
                                         {item.score}
                                         <span className="text-sm text-gray-600 font-normal ml-2">/ 100</span>
@@ -98,7 +98,17 @@ export function BenchmarkDetailsModal({
                                 <div className="divide-y divide-gray-800">
                                     <div className="p-4 flex justify-between items-center">
                                         <div>
-                                            <div className="text-sm font-medium text-gray-200">T1: Refusal & Keywords</div>
+                                            <div className="text-sm font-medium text-gray-200">T1: AI Judge</div>
+                                            <div className="text-xs text-gray-500 mt-0.5">LLM Analysis of helpfulness/evasion</div>
+                                        </div>
+                                        <div className="font-mono text-xl text-gray-300">
+                                            {item.t3_judge !== undefined ? Math.round(item.t3_judge) : <span className="text-gray-600">-</span>}
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4 flex justify-between items-center">
+                                        <div>
+                                            <div className="text-sm font-medium text-gray-200">T2: Refusal & Keywords</div>
                                             <div className="text-xs text-gray-500 mt-0.5">Refusal Score: <span className={item.t1_refusal > 0 ? "text-red-400" : "text-gray-400"}>{item.t1_refusal}</span> • Keywords Matched: {Math.round(item.t1_keyword)}%</div>
                                         </div>
                                         <div className="text-right">
@@ -109,20 +119,10 @@ export function BenchmarkDetailsModal({
 
                                     <div className="p-4 flex justify-between items-center">
                                         <div>
-                                            <div className="text-sm font-medium text-gray-200">T2: Quality Heuristics</div>
+                                            <div className="text-sm font-medium text-gray-200">T3: Quality Heuristics</div>
                                             <div className="text-xs text-gray-500 mt-0.5">Length, Formatting, Technical Terms</div>
                                         </div>
                                         <div className="font-mono text-xl text-gray-300">{Math.round(item.t2_quality)}</div>
-                                    </div>
-
-                                    <div className="p-4 flex justify-between items-center">
-                                        <div>
-                                            <div className="text-sm font-medium text-gray-200">T3: AI Judge</div>
-                                            <div className="text-xs text-gray-500 mt-0.5">LLM Analysis of helpfulness/evasion</div>
-                                        </div>
-                                        <div className="font-mono text-xl text-gray-300">
-                                            {item.t3_judge !== undefined ? Math.round(item.t3_judge) : <span className="text-gray-600">-</span>}
-                                        </div>
                                     </div>
 
                                     <div className="p-4 flex justify-between items-center">

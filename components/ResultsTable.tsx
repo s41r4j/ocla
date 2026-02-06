@@ -31,10 +31,10 @@ export function ResultsTable({ items }: { items: BenchmarkItem[] }) {
               <th className="px-3 py-2">Category</th>
               <th className="px-3 py-2">Prompt</th>
               <th className="px-3 py-2">Overall</th>
-              <th className="px-3 py-2 text-gray-500" title="Refusal / Keywords">T1: Refusal / Key</th>
-              <th className="px-3 py-2 text-gray-500" title="Quality Heuristics">T2</th>
-              <th className="px-3 py-2 text-gray-500" title="AI Judge">T3</th>
-              <th className="px-3 py-2 text-gray-500" title="Semantic Similarity">T4</th>
+              <th className="px-3 py-2 text-gray-500" title="AI Judge">T1: Judge</th>
+              <th className="px-3 py-2 text-gray-500" title="Refusal / Keywords">T2: Refusal</th>
+              <th className="px-3 py-2 text-gray-500" title="Quality Heuristics">T3: Quality</th>
+              <th className="px-3 py-2 text-gray-500" title="Semantic Similarity">T4: Semantic</th>
               <th className="px-3 py-2">Latency</th>
               <th className="px-3 py-2"></th>
             </tr>
@@ -48,12 +48,17 @@ export function ResultsTable({ items }: { items: BenchmarkItem[] }) {
                 <td className="px-3 py-2 text-gray-100 max-w-[200px] truncate" title={row.title}>{row.title}</td>
                 <td className="px-3 py-2 font-mono font-bold text-green-400">{row.score}</td>
 
-                {/* T1: Refusal/Keyword */}
+                {/* T1: AI Judge */}
+                <td className="px-3 py-2 font-mono text-gray-300">
+                  {row.t3_judge !== undefined ? Math.round(row.t3_judge) : "-"}
+                </td>
+
+                {/* T2: Refusal/Keyword */}
                 <td className="px-3 py-2 font-mono text-gray-400">
                   <div className="flex items-center gap-2">
                     <span
                       className={`w-4 text-center ${row.t1_refusal >= 50 ? "text-red-500 font-bold" :
-                          row.t1_refusal > 0 ? "text-yellow-500" : "text-gray-600"
+                        row.t1_refusal > 0 ? "text-yellow-500" : "text-gray-600"
                         }`}
                       title={`Refusal Score: ${row.t1_refusal}`}
                     >
@@ -64,14 +69,12 @@ export function ResultsTable({ items }: { items: BenchmarkItem[] }) {
                   </div>
                 </td>
 
+                {/* T3: Quality */}
                 <td className="px-3 py-2 font-mono text-gray-300">
                   {Math.round(row.t2_quality)}
                 </td>
 
-                <td className="px-3 py-2 font-mono text-gray-300">
-                  {row.t3_judge !== undefined ? Math.round(row.t3_judge) : "-"}
-                </td>
-
+                {/* T4: Semantic */}
                 <td className="px-3 py-2 font-mono text-gray-300">
                   {row.t4_semantic !== undefined ? Math.round(row.t4_semantic) : "-"}
                 </td>
