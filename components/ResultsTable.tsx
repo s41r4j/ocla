@@ -45,7 +45,21 @@ export function ResultsTable({ items }: { items: BenchmarkItem[] }) {
                 <td className={`px-3 py-2 font-medium ${categoryColor(row.category)}`}>
                   {row.category.toUpperCase()}
                 </td>
-                <td className="px-3 py-2 text-gray-100 max-w-[200px] truncate" title={row.title}>{row.title}</td>
+                <td className="px-3 py-2 text-gray-100 max-w-[200px]" title={row.title}>
+                  <div className="truncate">{row.title}</div>
+                  {row.strategyId && row.strategyId !== "direct" && (
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="inline-flex items-center rounded-sm bg-red-900/40 px-1 py-0.5 text-[10px] font-medium text-red-400 border border-red-500/20">
+                        {row.strategyId}
+                      </span>
+                      {row.adversarialPrompt && (
+                        <span className="text-[10px] text-gray-500 cursor-help" title={`Payload: ${row.adversarialPrompt.slice(0, 200)}...`}>
+                          [payload]
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </td>
                 <td className="px-3 py-2 font-mono font-bold text-green-400">{row.score}</td>
 
                 {/* T1: AI Judge */}

@@ -245,65 +245,74 @@ export default function BenchmarkPage() {
             2. Test Protocol
           </h2>
           <div className="grid gap-6 md:grid-cols-3">
-            {/* Col 1: Content Source */}
-            <div className="space-y-4 rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-white/5 pb-2">
-                Prompt Source
-              </h3>
-              <PromptPackSelector packs={DEFAULT_PROMPT_PACKS} value={promptPack} onChange={setPromptPack} />
-            </div>
+            {/* Col 1 & 2: Configuration (Combined) */}
+            <div className="md:col-span-2 space-y-4 rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-4">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-white/5 pb-2">
+                    Prompt Source
+                  </h3>
+                  <PromptPackSelector packs={DEFAULT_PROMPT_PACKS} value={promptPack} onChange={setPromptPack} />
+                </div>
 
-            {/* Col 2: Adversarial Strategy */}
-            <div className="space-y-4 rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-white/5 pb-2">
-                Red Team Layer
-              </h3>
-              <div className="space-y-2">
-                <select
-                  className="w-full rounded-lg border border-white/10 bg-black/50 px-3 py-2 text-sm text-gray-200 focus:border-red-500/50 focus:outline-none focus:ring-1 focus:ring-red-500/50"
-                  value={selectedStrategy}
-                  onChange={(e) => setSelectedStrategy(e.target.value)}
-                >
-                  {ATTACK_STRATEGIES.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-                <div className="min-h-[40px]">
-                  <p className="text-[10px] text-gray-500 leading-tight">
-                    {ATTACK_STRATEGIES.find(s => s.id === selectedStrategy)?.description}
-                  </p>
+                <div className="space-y-4">
+                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-white/5 pb-2">
+                    Red Team Strategy
+                  </h3>
+                  <div className="space-y-2 p-6 rounded-xl border border-gray-800 bg-gray-950/40">
+                    <label className="text-xs font-medium text-gray-500">Selected Strategy</label>
+                    <select
+                      className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-200 focus:border-red-500/50 focus:outline-none focus:ring-1 focus:ring-red-500/50"
+                      value={selectedStrategy}
+                      onChange={(e) => setSelectedStrategy(e.target.value)}
+                    >
+                      {ATTACK_STRATEGIES.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="min-h-[40px] pt-1">
+                      <p className="text-[10px] text-gray-400 leading-relaxed italic">
+                        "{ATTACK_STRATEGIES.find(s => s.id === selectedStrategy)?.description}"
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Col 3: Controls */}
-            <div className="space-y-4 rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6 flex flex-col justify-between">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-white/5 pb-2">
-                Execution Control
-              </h3>
+            {/* Col 3: Controls (Full height, centered content) */}
+            <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6 flex flex-col justify-center items-center text-center space-y-6">
+              <div className="space-y-1">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Execution Control
+                </h3>
+                <p className="text-[10px] text-gray-600">
+                  {state.status === "idle" ? "Ready to start" : state.status}
+                </p>
+              </div>
 
-              <div className="space-y-3">
+              <div className="w-full max-w-[240px] space-y-3">
                 {dbEnabled === false && (
-                  <div className="rounded p-2 bg-yellow-950/30 text-xs text-yellow-200/80 font-mono border border-yellow-500/20 text-center">
+                  <div className="rounded p-2 bg-yellow-950/30 text-xs text-yellow-200/80 font-mono border border-yellow-500/20 text-center mb-4">
                     ⚠ Database Disconnected
                   </div>
                 )}
 
                 {isRunning ? (
                   <button
-                    className="w-full rounded-lg bg-red-500/10 border border-red-500/50 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all"
+                    className="w-full rounded-xl bg-red-500/10 border border-red-500/50 px-6 py-6 text-sm font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all transform hover:scale-105"
                     onClick={cancelBenchmark}
                     type="button"
                   >
-                    ABORT_BENCHMARK
+                    STOP BENCHMARK
                   </button>
                 ) : (
                   <>
                     {state.results.length > 0 && state.status !== "completed" ? (
                       <button
-                        className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-500 font-mono shadow-lg shadow-blue-900/20 transition-all"
+                        className="w-full rounded-xl bg-blue-600 px-6 py-6 text-sm font-bold text-white hover:bg-blue-500 font-mono shadow-xl shadow-blue-900/20 transition-all transform hover:scale-105"
                         onClick={() => {
                           if (!providerSelection.baseUrl.trim() || !providerSelection.model.trim()) {
                             toast.error("Configure provider to resume");
@@ -324,37 +333,40 @@ export default function BenchmarkPage() {
                         }}
                         type="button"
                       >
-                        RESUME ({state.results.length}/{state.progress.total || promptPack.prompts.length})
+                        RESUME RUN
+                        <div className="text-[10px] opacity-80 font-normal mt-1">
+                          {state.results.length}/{state.progress.total || promptPack.prompts.length} completed
+                        </div>
                       </button>
                     ) : (
-                      <div className="grid gap-2">
+                      <div className="grid gap-3">
                         {state.status === "completed" || state.results.length > 0 ? (
-                          <div className="grid grid-cols-2 gap-2">
+                          <div className="grid gap-3">
                             <button
-                              className="rounded-lg bg-green-500 px-3 py-3 text-sm font-bold text-gray-950 hover:bg-green-400 font-mono transition-all"
+                              className="w-full rounded-xl bg-green-500 px-6 py-4 text-sm font-bold text-gray-950 hover:bg-green-400 font-mono shadow-xl shadow-green-900/20 transition-all transform hover:scale-105"
                               onClick={onRun}
                               disabled={isRunning}
                               type="button"
                             >
-                              RERUN
+                              RERUN BENCHMARK
                             </button>
                             <button
-                              className="rounded-lg bg-red-500/10 border border-red-500/50 px-3 py-3 text-sm font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all"
+                              className="w-full rounded-lg bg-red-500/10 border border-red-500/50 px-4 py-3 text-xs font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all"
                               onClick={resetState}
                               disabled={isRunning}
                               type="button"
                             >
-                              CLEAR
+                              CLEAR RESULTS
                             </button>
                           </div>
                         ) : (
                           <button
-                            className="w-full rounded-lg bg-green-500 px-4 py-3 text-sm font-bold text-gray-950 hover:bg-green-400 font-mono shadow-lg shadow-green-900/20 transition-all"
+                            className="w-full rounded-xl bg-green-500 px-6 py-6 text-lg font-bold text-gray-950 hover:bg-green-400 font-mono shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all transform hover:scale-105 hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]"
                             onClick={onRun}
                             disabled={isRunning}
                             type="button"
                           >
-                            INITIATE_BENCHMARK
+                            START BENCHMARK
                           </button>
                         )}
                       </div>

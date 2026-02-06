@@ -42,7 +42,7 @@ export function PromptPackSelector({
         </span>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-1">
         {/* Pack Selection */}
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-200">
@@ -77,8 +77,8 @@ export function PromptPackSelector({
           </p>
         </div>
 
-        {/* Import Custom */}
-        <div className="space-y-2">
+        {/* Import Custom (Disabled) */}
+        {/* <div className="space-y-2">
           <label className="text-sm font-medium text-gray-200">
             Import Custom Pack (JSON)
           </label>
@@ -107,7 +107,7 @@ export function PromptPackSelector({
           <p className="text-xs text-gray-500">
             Useful for internal red-teaming with proprietary datasets.
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );
