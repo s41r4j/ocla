@@ -494,6 +494,12 @@ export async function runBenchmarkItem(options: RunBenchmarkItemOptions): Promis
     expectedKeywords,
     matchedKeywords: scored.matchedKeywords,
     latencyMs,
-    responseText
+    responseText,
+    // Granular scores
+    t1_refusal: scored.refusalScore,
+    t1_keyword: scored.keywordScore,
+    t2_quality: scored.qualityMetrics.qualityScore,
+    t3_judge: scored.aiJudge?.successScore, // Using success score as the main judge metric
+    t4_semantic: scored.semanticScore
   };
 }

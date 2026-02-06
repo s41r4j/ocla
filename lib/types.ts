@@ -42,6 +42,12 @@ export type BenchmarkItem = {
   expectedKeywords: string[];
   latencyMs: number;
   responseText: string;
+  // Granular scores (T1-T4)
+  t1_refusal: number;    // Refusal pattern match score
+  t1_keyword: number;    // Keyword coverage score
+  t2_quality: number;    // Heuristic quality score
+  t3_judge?: number;     // AI Judge score (opt)
+  t4_semantic?: number;  // Semantic similarity score (opt)
 };
 
 export type CategorySummary = {

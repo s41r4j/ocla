@@ -11,7 +11,7 @@ import { runBenchmarkItem, summarize } from "@/lib/benchmarkRunner";
 import { useBenchmark } from "@/lib/BenchmarkContext";
 import { DEFAULT_PROMPT_PACKS } from "@/lib/prompts";
 import { PROVIDER_PRESETS } from "@/lib/providers";
-import type { BenchmarkRun } from "@/lib/types";
+import type { BenchmarkRun, BenchmarkItem } from "@/lib/types";
 import { downloadTextFile, getOrCreateUserHash, nowIso, sha256Hex } from "@/lib/utils";
 
 function toCsv(run: BenchmarkRun) {
@@ -35,7 +35,7 @@ function sharePayload(run: BenchmarkRun) {
 }
 
 export default function BenchmarkPage() {
-  const { state, startBenchmark, cancelBenchmark } = useBenchmark();
+  const { state, startBenchmark, cancelBenchmark, resetState } = useBenchmark();
 
   // Default to OpenAI (gpt-4o)
   const [providerSelection, setProviderSelection] = useState<ProviderSelection>(() => {
@@ -49,7 +49,6 @@ export default function BenchmarkPage() {
   });
 
   const [promptPack, setPromptPack] = useState(DEFAULT_PROMPT_PACKS[0]!);
-  const [isSharing, setIsSharing] = useState(false);
   const [dbEnabled, setDbEnabled] = useState<boolean | null>(null);
 
   const preset = PROVIDER_PRESETS.find((p) => p.id === providerSelection.providerId) ?? PROVIDER_PRESETS[0]!;
@@ -120,6 +119,56 @@ export default function BenchmarkPage() {
     setRun(mockRun);
   }, [state.results, state.config, state.startedAt, providerSelection, promptPack.id]);
 
+  async function handleBenchmarkComplete(results: BenchmarkItem[]) {
+    toast.success("Benchmark complete.");
+
+    // Auto-submit if DB is enabled
+    if (dbEnabled !== false) {
+      const toastId = toast.loading("Submitting results...");
+      try {
+        const summary = summarize(results);
+        const promptPackSha256 = await sha256Hex(JSON.stringify(promptPack));
+
+        const runId = globalThis.crypto?.randomUUID?.() ?? `run_${Math.random().toString(16).slice(2)}`;
+
+        // Ensure accurate metadata even if resuming
+        const finalRun: BenchmarkRun = {
+          runId,
+          createdAt: nowIso(),
+          execution: "browser",
+          trustLevel: 3,
+          trustReason: "In-browser execution (API key never sent to server routes).",
+          providerId: preset.id,
+          baseUrl: providerSelection.baseUrl.trim(),
+          model: providerSelection.model.trim(),
+          promptPackId: promptPack.id,
+          promptPackSha256,
+          buildSha: process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA,
+          userHash: getOrCreateUserHash(),
+          summary,
+          items: results
+        };
+
+        const res = await fetch("/api/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(sharePayload(finalRun))
+        });
+
+        if (!res.ok) {
+          const text = await res.text();
+          console.error("Auto-submit failed:", text);
+          toast.error("Failed to submit results", { id: toastId });
+        } else {
+          toast.success("Results uploaded to Leaderboard!", { id: toastId });
+        }
+      } catch (error) {
+        console.error("Auto-submit error", error);
+        toast.error("Submission error", { id: toastId });
+      }
+    }
+  }
+
   async function onRun() {
     if (!providerSelection.baseUrl.trim()) {
       toast.error("Base URL is required.");
@@ -144,39 +193,9 @@ export default function BenchmarkPage() {
       model: providerSelection.model.trim(),
       apiKey: providerSelection.apiKey || "",
       prompts: promptPack.prompts,
-      runFn: runBenchmarkItem, // Pass the singe-item runner
-      onComplete: () => {
-        toast.success("Benchmark complete.");
-      }
+      runFn: runBenchmarkItem,
+      onComplete: handleBenchmarkComplete
     });
-  }
-
-  async function onShare() {
-    if (!run) return;
-    setIsSharing(true);
-    try {
-      // Re-calculate robust values for sharing
-      const promptPackSha256 = await sha256Hex(JSON.stringify(promptPack));
-      const finalRun: BenchmarkRun = {
-        ...run,
-        promptPackId: promptPack.id,
-        promptPackSha256,
-        userHash: getOrCreateUserHash()
-      };
-
-      const res = await fetch("/api/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(sharePayload(finalRun))
-      });
-      const text = await res.text();
-      if (!res.ok) throw new Error(text || `Upload failed (${res.status})`);
-      toast.success("Shared anonymously.");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Share failed.");
-    } finally {
-      setIsSharing(false);
-    }
   }
 
   const isRunning = state.status === "running";
@@ -232,7 +251,7 @@ export default function BenchmarkPage() {
                     apiKey: providerSelection.apiKey || "",
                     prompts: promptPack.prompts,
                     runFn: runBenchmarkItem,
-                    onComplete: () => toast.success("Benchmark complete."),
+                    onComplete: handleBenchmarkComplete,
                     resume: true
                   });
                 }}
@@ -242,14 +261,35 @@ export default function BenchmarkPage() {
               </button>
             )}
 
-            <button
-              className="rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-black hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-60"
-              onClick={onRun}
-              disabled={isRunning}
-              type="button"
-            >
-              {state.status === "completed" ? "Run again" : (state.results.length > 0 ? "Restart (Clear)" : "Run benchmark")}
-            </button>
+            {state.status === "completed" || state.results.length > 0 ? (
+              <>
+                <button
+                  className="rounded-md bg-red-500/10 border border-red-500/50 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-500/20"
+                  onClick={resetState}
+                  disabled={isRunning}
+                  type="button"
+                >
+                  Clear Results
+                </button>
+                <button
+                  className="rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-black hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  onClick={onRun}
+                  disabled={isRunning}
+                  type="button"
+                >
+                  Run Again
+                </button>
+              </>
+            ) : (
+              <button
+                className="rounded-md bg-green-500 px-4 py-2 text-sm font-medium text-black hover:bg-green-400 disabled:cursor-not-allowed disabled:opacity-60"
+                onClick={onRun}
+                disabled={isRunning}
+                type="button"
+              >
+                Run Benchmark
+              </button>
+            )}
           </div>
         )}
 
@@ -280,15 +320,7 @@ export default function BenchmarkPage() {
             >
               Download CSV
             </button>
-            <button
-              className="rounded-md border border-gray-800 bg-gray-950 px-4 py-2 text-sm font-medium text-gray-100 hover:bg-gray-900 disabled:cursor-not-allowed disabled:opacity-60"
-              onClick={onShare}
-              disabled={isSharing || dbEnabled === false}
-              type="button"
-              title={dbEnabled === false ? "Configure DATABASE_URL to enable uploads" : undefined}
-            >
-              {isSharing ? "Sharing…" : "Share anon summary"}
-            </button>
+
           </>
         ) : null}
       </div>
