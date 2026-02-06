@@ -24,7 +24,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <nav className="flex items-center gap-4 text-sm text-gray-300">
                 <Link href="/benchmark">Benchmark</Link>
                 <Link href="/leaderboard">Leaderboard</Link>
-                <a href="https://github.com/" target="_blank" rel="noreferrer">
+                <a href="https://github.com/s41r4j/ocla" target="_blank" rel="noreferrer">
                   GitHub
                 </a>
               </nav>

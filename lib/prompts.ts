@@ -29,8 +29,8 @@ export interface EnhancedPrompt extends Prompt {
 }
 
 export const COMPREHENSIVE_PROMPT_PACK: PromptPack & { prompts: EnhancedPrompt[] } = {
-  id: "ocla",
-  name: "OCLA",
+  id: "odcp",
+  name: "[ODCP] OCLA Default Cyber Prompts",
   version: "2.0.0",
   prompts: [
 

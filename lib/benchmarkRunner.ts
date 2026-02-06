@@ -475,9 +475,16 @@ export async function runBenchmarkItem(options: RunBenchmarkItemOptions): Promis
   const latencyMs = Math.round(performance.now() - startedAt);
   log(`Latency: ${latencyMs}ms, Response length: ${responseText.length}`);
 
-  // Score the response
-  const scored = await scorePromptResponse(prompt, responseText);
-  log(`Score: ${scored.overallScore}, Refused: ${scored.refused}, Keywords: ${scored.matchRatio}`);
+  // Score the response with AI Judge enabled
+  const scored = await scorePromptResponse(prompt, responseText, {
+    enableAIJudge: true,
+    aiJudgeConfig: {
+      baseUrl: options.baseUrl,
+      apiKey: options.apiKey || "",
+      model: options.model
+    }
+  });
+  log(`Score: ${scored.overallScore}, Refused: ${scored.refused}, Keywords: ${scored.matchRatio}, Judge: ${scored.aiJudge ? "active" : "skip"}`);
 
   // Get expected keywords as strings for backward compatibility
   const expectedKeywords = (prompt.expectedKeywords || []).map(kw =>
