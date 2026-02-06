@@ -37,6 +37,7 @@ interface BenchmarkContextType {
         runFn: (args: any) => Promise<BenchmarkItem>;
         onComplete: (results: BenchmarkItem[]) => void;
         resume?: boolean;
+        strategyId?: string;
     }) => void;
     cancelBenchmark: () => void;
     resetState: () => void;
@@ -98,6 +99,7 @@ export function BenchmarkProvider({ children }: { children: ReactNode }) {
         runFn: (args: any) => Promise<BenchmarkItem>;
         onComplete: (results: BenchmarkItem[]) => void;
         resume?: boolean;
+        strategyId?: string;
     }) => {
         if (runningRef.current) return;
 

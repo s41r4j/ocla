@@ -217,7 +217,7 @@ export default function BenchmarkPage() {
       {/* Background Grid */}
       <div className="absolute inset-0 z-0 pointer-events-none bg-grid-pattern [mask-image:linear-gradient(to_bottom,white,transparent)]" />
 
-      <div className="relative z-10 mx-auto max-w-7xl px-6 space-y-10">
+      <div className="relative z-10 mx-auto max-w-7xl px-6 space-y-8">
         <div className="space-y-2 border-b border-white/10 pb-8">
           <h1 className="text-4xl font-bold tracking-tight">
             <span className="font-mono text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600">
@@ -229,21 +229,36 @@ export default function BenchmarkPage() {
           </p>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-3">
-          {/* Left Column: Configuration */}
-          <div className="space-y-6 lg:col-span-1">
-            <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6 space-y-6">
-              <h3 className="font-bold text-gray-200 text-sm uppercase tracking-wider font-mono border-b border-white/5 pb-2 mb-4">
-                Configuration
-              </h3>
-              <ProviderSelector presets={PROVIDER_PRESETS} value={providerSelection} onChange={setProviderSelection} />
-              <PromptPackSelector packs={DEFAULT_PROMPT_PACKS} value={promptPack} onChange={setPromptPack} />
+        {/* Section 1: Provider Configuration (Full Width) */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider font-mono">
+            1. Target Model
+          </h2>
+          <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6">
+            <ProviderSelector presets={PROVIDER_PRESETS} value={providerSelection} onChange={setProviderSelection} />
+          </div>
+        </section>
 
-              {/* Red Team Strategy Selector */}
+        {/* Section 2: Test Protocol (Grid) */}
+        <section className="space-y-4">
+          <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider font-mono">
+            2. Test Protocol
+          </h2>
+          <div className="grid gap-6 md:grid-cols-3">
+            {/* Col 1: Content Source */}
+            <div className="space-y-4 rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-white/5 pb-2">
+                Prompt Source
+              </h3>
+              <PromptPackSelector packs={DEFAULT_PROMPT_PACKS} value={promptPack} onChange={setPromptPack} />
+            </div>
+
+            {/* Col 2: Adversarial Strategy */}
+            <div className="space-y-4 rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-white/5 pb-2">
+                Red Team Layer
+              </h3>
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                  Attack Strategy (Red Team)
-                </label>
                 <select
                   className="w-full rounded-lg border border-white/10 bg-black/50 px-3 py-2 text-sm text-gray-200 focus:border-red-500/50 focus:outline-none focus:ring-1 focus:ring-red-500/50"
                   value={selectedStrategy}
@@ -255,23 +270,27 @@ export default function BenchmarkPage() {
                     </option>
                   ))}
                 </select>
-                <p className="text-[10px] text-gray-500 px-1">
-                  {ATTACK_STRATEGIES.find(s => s.id === selectedStrategy)?.description}
-                </p>
+                <div className="min-h-[40px]">
+                  <p className="text-[10px] text-gray-500 leading-tight">
+                    {ATTACK_STRATEGIES.find(s => s.id === selectedStrategy)?.description}
+                  </p>
+                </div>
               </div>
             </div>
 
-            {dbEnabled === false && (
-              <div className="rounded-xl border border-yellow-500/20 bg-yellow-950/20 p-4 text-sm text-yellow-200/80 font-mono">
-                [WARN]: Database disconnected. Results are local-only.
-              </div>
-            )}
-
-            <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6">
-              <h3 className="font-bold text-gray-200 text-sm uppercase tracking-wider font-mono border-b border-white/5 pb-2 mb-4">
-                Control_Panel
+            {/* Col 3: Controls */}
+            <div className="space-y-4 rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6 flex flex-col justify-between">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-white/5 pb-2">
+                Execution Control
               </h3>
-              <div className="flex flex-col gap-3">
+
+              <div className="space-y-3">
+                {dbEnabled === false && (
+                  <div className="rounded p-2 bg-yellow-950/30 text-xs text-yellow-200/80 font-mono border border-yellow-500/20 text-center">
+                    ⚠ Database Disconnected
+                  </div>
+                )}
+
                 {isRunning ? (
                   <button
                     className="w-full rounded-lg bg-red-500/10 border border-red-500/50 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all"
@@ -282,7 +301,7 @@ export default function BenchmarkPage() {
                   </button>
                 ) : (
                   <>
-                    {state.results.length > 0 && state.status !== "completed" && (
+                    {state.results.length > 0 && state.status !== "completed" ? (
                       <button
                         className="w-full rounded-lg bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-500 font-mono shadow-lg shadow-blue-900/20 transition-all"
                         onClick={() => {
@@ -299,127 +318,109 @@ export default function BenchmarkPage() {
                             prompts: promptPack.prompts,
                             runFn: runBenchmarkItem,
                             onComplete: handleBenchmarkComplete,
-                            resume: true
+                            resume: true,
+                            strategyId: selectedStrategy
                           });
                         }}
                         type="button"
                       >
-                        RESUME_RUN ({state.results.length}/{state.progress.total || promptPack.prompts.length})
+                        RESUME ({state.results.length}/{state.progress.total || promptPack.prompts.length})
                       </button>
-                    )}
-
-                    {state.status === "completed" || state.results.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          className="rounded-lg bg-green-500 px-4 py-3 text-sm font-bold text-gray-950 hover:bg-green-400 font-mono shadow-lg shadow-green-900/20 transition-all"
-                          onClick={onRun}
-                          disabled={isRunning}
-                          type="button"
-                        >
-                          RERUN
-                        </button>
-                        <button
-                          className="rounded-lg bg-red-500/10 border border-red-500/50 px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all"
-                          onClick={resetState}
-                          disabled={isRunning}
-                          type="button"
-                        >
-                          CLEAR
-                        </button>
-                      </div>
                     ) : (
-                      <button
-                        className="w-full rounded-lg bg-green-500 px-4 py-3 text-sm font-bold text-gray-950 hover:bg-green-400 font-mono shadow-lg shadow-green-900/20 transition-all"
-                        onClick={onRun}
-                        disabled={isRunning}
-                        type="button"
-                      >
-                        INITIATE_BENCHMARK
-                      </button>
+                      <div className="grid gap-2">
+                        {state.status === "completed" || state.results.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              className="rounded-lg bg-green-500 px-3 py-3 text-sm font-bold text-gray-950 hover:bg-green-400 font-mono transition-all"
+                              onClick={onRun}
+                              disabled={isRunning}
+                              type="button"
+                            >
+                              RERUN
+                            </button>
+                            <button
+                              className="rounded-lg bg-red-500/10 border border-red-500/50 px-3 py-3 text-sm font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all"
+                              onClick={resetState}
+                              disabled={isRunning}
+                              type="button"
+                            >
+                              CLEAR
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            className="w-full rounded-lg bg-green-500 px-4 py-3 text-sm font-bold text-gray-950 hover:bg-green-400 font-mono shadow-lg shadow-green-900/20 transition-all"
+                            onClick={onRun}
+                            disabled={isRunning}
+                            type="button"
+                          >
+                            INITIATE_BENCHMARK
+                          </button>
+                        )}
+                      </div>
                     )}
                   </>
                 )}
               </div>
             </div>
-
-            {run && state.results.length > 0 && (
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  className="rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-2 text-xs font-mono text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-                  onClick={() =>
-                    downloadTextFile(
-                      `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.json`,
-                      JSON.stringify(run, null, 2)
-                    )
-                  }
-                  type="button"
-                >
-                  DOWNLOAD_JSON
-                </button>
-                <button
-                  className="rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-2 text-xs font-mono text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-                  onClick={() =>
-                    downloadTextFile(
-                      `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.csv`,
-                      toCsv(run),
-                      "text/csv"
-                    )
-                  }
-                  type="button"
-                >
-                  DOWNLOAD_CSV
-                </button>
-              </div>
-            )}
           </div>
+        </section>
 
-          {/* Right Column: Progress (Shows only when running) */}
-          {progress && (
-            <div className="lg:col-span-2 space-y-6 animate-in fade-in zoom-in duration-300">
-              <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6">
-                <div className="flex items-center justify-between gap-3 text-sm mb-3">
-                  <div className="text-gray-200 font-mono">{progress.label}</div>
-                  <div className="font-mono text-green-400 font-bold">
-                    {progress.completed}/{progress.total}
-                  </div>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-800">
-                  <div
-                    className="h-full bg-green-500 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
-                    style={{
-                      width: `${Math.round((progress.completed / Math.max(1, progress.total)) * 100)}%`
-                    }}
-                  />
-                </div>
+        {/* Section 3: Downloads (Only if run exists) */}
+        {run && state.results.length > 0 && (
+          <div className="flex justify-end gap-3">
+            <button
+              className="rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-2 text-xs font-mono text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+              onClick={() =>
+                downloadTextFile(
+                  `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.json`,
+                  JSON.stringify(run, null, 2)
+                )
+              }
+              type="button"
+            >
+              DOWNLOAD_JSON
+            </button>
+            <button
+              className="rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-2 text-xs font-mono text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+              onClick={() =>
+                downloadTextFile(
+                  `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.csv`,
+                  toCsv(run),
+                  "text/csv"
+                )
+              }
+              type="button"
+            >
+              DOWNLOAD_CSV
+            </button>
+          </div>
+        )}
+
+        {/* Section 4: Progress Bar (Full Width) */}
+        {progress && (
+          <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6 animate-in fade-in slide-in-from-top-4 duration-300">
+            <div className="flex items-center justify-between gap-3 text-sm mb-3">
+              <div className="text-gray-200 font-mono flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                {progress.label}
+              </div>
+              <div className="font-mono text-green-400 font-bold">
+                {progress.completed}/{progress.total}
               </div>
             </div>
-          )}
-
-          {/* Right Column: Progress */}
-          <div className="space-y-6 lg:col-span-2">
-            {progress ? (
-              <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6">
-                <div className="flex items-center justify-between gap-3 text-sm mb-3">
-                  <div className="text-gray-200 font-mono">{progress.label}</div>
-                  <div className="font-mono text-green-400 font-bold">
-                    {progress.completed}/{progress.total}
-                  </div>
-                </div>
-                <div className="h-2 w-full overflow-hidden rounded-full bg-gray-800">
-                  <div
-                    className="h-full bg-green-500 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
-                    style={{
-                      width: `${Math.round((progress.completed / Math.max(1, progress.total)) * 100)}%`
-                    }}
-                  />
-                </div>
-              </div>
-            ) : null}
+            <div className="h-2 w-full overflow-hidden rounded-full bg-gray-800">
+              <div
+                className="h-full bg-green-500 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                style={{
+                  width: `${Math.round((progress.completed / Math.max(1, progress.total)) * 100)}%`
+                }}
+              />
+            </div>
           </div>
+        )}
 
-        </div>
-
-        {/* Bottom Section: Stats & Live Results (Full Width) */}
+        {/* Section 5: Results Feed */}
         <div className="space-y-6">
           {/* Stats Grid */}
           {run && run.summary ? (
@@ -468,7 +469,6 @@ export default function BenchmarkPage() {
             </div>
           )}
         </div>
-
       </div>
     </div>
   );

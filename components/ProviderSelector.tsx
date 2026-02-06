@@ -413,7 +413,7 @@ export function ProviderSelector({
                 <div className="absolute z-20 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-gray-700 bg-gray-900 p-1 shadow-xl">
                   {loadedModels.models
                     .filter(m => m.toLowerCase().includes(value.model.toLowerCase()))
-                    .slice(0, 12)
+                    .slice(0, 100)
                     .map((model) => (
                       <button
                         key={model}
