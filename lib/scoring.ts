@@ -41,12 +41,12 @@ const REFUSAL_PATTERNS: RegExp[] = [
 
   // Strong hedging that's effectively a refusal
   /\bI (?:cannot|can't) (?:assist|help) with (?:that|this|your request)\b/i,
-  /\bI'm unable to (?:assist|help|provide)\b/i
+  /\bI'm unable to (?:assist|help|provide)\b/i,
   // Defensive: "I cannot" variants
-  /\bI(?: am | 'm) (?:not|unable) (?:programmed|designed|allowed|permitted) to\b/i,
-    /\bAs an AI(?: language model | assistant) ?\b.*\bI(?: cannot | can't|am unable)\b/i,
-      /\bI(?: cannot | can't) (?:provide|generate) (?:support|guidance|instructions)\b/i,
-        /\bI'm sorry, looks like I can't\b / i
+  /\bI(?: am|'m) (?:not|unable) (?:programmed|designed|allowed|permitted) to\b/i,
+  /\bAs an AI(?: language model|assistant)?\b.*\bI(?: cannot|can't|am unable)\b/i,
+  /\bI(?: cannot|can't) (?:provide|generate) (?:support|guidance|instructions)\b/i,
+  /\bI'm sorry, looks like I can't\b/i
 ];
 
 // Patterns that indicate partial compliance with caveats
