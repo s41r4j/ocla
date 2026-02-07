@@ -358,6 +358,34 @@ export default function BenchmarkPage() {
                             >
                               CLEAR RESULTS
                             </button>
+
+                            <div className="grid grid-cols-2 gap-2 pt-2">
+                              <button
+                                className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-2 text-[10px] font-mono text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+                                onClick={() =>
+                                  run && downloadTextFile(
+                                    `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.json`,
+                                    JSON.stringify(run, null, 2)
+                                  )
+                                }
+                                type="button"
+                              >
+                                JSON
+                              </button>
+                              <button
+                                className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-2 text-[10px] font-mono text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+                                onClick={() =>
+                                  run && downloadTextFile(
+                                    `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.csv`,
+                                    toCsv(run),
+                                    "text/csv"
+                                  )
+                                }
+                                type="button"
+                              >
+                                CSV
+                              </button>
+                            </div>
                           </div>
                         ) : (
                           <button
@@ -378,36 +406,7 @@ export default function BenchmarkPage() {
           </div>
         </section>
 
-        {/* Section 3: Downloads (Only if run exists) */}
-        {run && state.results.length > 0 && (
-          <div className="flex justify-end gap-3">
-            <button
-              className="rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-2 text-xs font-mono text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-              onClick={() =>
-                downloadTextFile(
-                  `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.json`,
-                  JSON.stringify(run, null, 2)
-                )
-              }
-              type="button"
-            >
-              DOWNLOAD_JSON
-            </button>
-            <button
-              className="rounded-lg border border-gray-700 bg-gray-800/50 px-4 py-2 text-xs font-mono text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
-              onClick={() =>
-                downloadTextFile(
-                  `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.csv`,
-                  toCsv(run),
-                  "text/csv"
-                )
-              }
-              type="button"
-            >
-              DOWNLOAD_CSV
-            </button>
-          </div>
-        )}
+
 
         {/* Section 4: Progress Bar (Full Width) */}
         {progress && (
