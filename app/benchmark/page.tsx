@@ -319,127 +319,127 @@ export default function BenchmarkPage() {
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Col 3: Controls (Full height, centered content) */}
-          <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6 flex flex-col justify-center items-center text-center space-y-6">
-            <div className="space-y-1">
-              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                Execution Control
-              </h3>
-              <p className="text-[10px] text-gray-600">
-                {state.status === "idle" ? "Ready to start" : state.status}
-              </p>
-            </div>
+            {/* Col 3: Controls (Full height, centered content) */}
+            <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6 flex flex-col justify-center items-center text-center space-y-6">
+              <div className="space-y-1">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  Execution Control
+                </h3>
+                <p className="text-[10px] text-gray-600">
+                  {state.status === "idle" ? "Ready to start" : state.status}
+                </p>
+              </div>
 
-            <div className="w-full max-w-[240px] space-y-3">
-              {dbEnabled === false && (
-                <div className="rounded p-2 bg-yellow-950/30 text-xs text-yellow-200/80 font-mono border border-yellow-500/20 text-center mb-4">
-                  ⚠ Database Disconnected
-                </div>
-              )}
+              <div className="w-full max-w-[240px] space-y-3">
+                {dbEnabled === false && (
+                  <div className="rounded p-2 bg-yellow-950/30 text-xs text-yellow-200/80 font-mono border border-yellow-500/20 text-center mb-4">
+                    ⚠ Database Disconnected
+                  </div>
+                )}
 
-              {isRunning ? (
-                <button
-                  className="w-full rounded-xl bg-red-500/10 border border-red-500/50 px-6 py-6 text-sm font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all transform hover:scale-105"
-                  onClick={cancelBenchmark}
-                  type="button"
-                >
-                  STOP BENCHMARK
-                </button>
-              ) : (
-                <>
-                  {state.results.length > 0 && state.status !== "completed" ? (
-                    <button
-                      className="w-full rounded-xl bg-blue-600 px-6 py-6 text-sm font-bold text-white hover:bg-blue-500 font-mono shadow-xl shadow-blue-900/20 transition-all transform hover:scale-105"
-                      onClick={() => {
-                        if (!providerSelection.baseUrl.trim() || !providerSelection.model.trim()) {
-                          toast.error("Configure provider to resume");
-                          return;
-                        }
-                        startBenchmark({
-                          providerId: preset.id,
-                          provider: preset,
-                          baseUrl: providerSelection.baseUrl.trim(),
-                          model: providerSelection.model.trim(),
-                          apiKey: providerSelection.apiKey || "",
-                          prompts: promptPack.prompts,
-                          runFn: runBenchmarkItem,
-                          onComplete: handleBenchmarkComplete,
-                          resume: true,
-                          strategyId: selectedStrategy
-                        });
-                      }}
-                      type="button"
-                    >
-                      RESUME RUN
-                      <div className="text-[10px] opacity-80 font-normal mt-1">
-                        {state.results.length}/{state.progress.total || promptPack.prompts.length} completed
-                      </div>
-                    </button>
-                  ) : (
-                    <div className="grid gap-3">
-                      {state.status === "completed" || state.results.length > 0 ? (
-                        <div className="grid gap-3">
+                {isRunning ? (
+                  <button
+                    className="w-full rounded-xl bg-red-500/10 border border-red-500/50 px-6 py-6 text-sm font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all transform hover:scale-105"
+                    onClick={cancelBenchmark}
+                    type="button"
+                  >
+                    STOP BENCHMARK
+                  </button>
+                ) : (
+                  <>
+                    {state.results.length > 0 && state.status !== "completed" ? (
+                      <button
+                        className="w-full rounded-xl bg-blue-600 px-6 py-6 text-sm font-bold text-white hover:bg-blue-500 font-mono shadow-xl shadow-blue-900/20 transition-all transform hover:scale-105"
+                        onClick={() => {
+                          if (!providerSelection.baseUrl.trim() || !providerSelection.model.trim()) {
+                            toast.error("Configure provider to resume");
+                            return;
+                          }
+                          startBenchmark({
+                            providerId: preset.id,
+                            provider: preset,
+                            baseUrl: providerSelection.baseUrl.trim(),
+                            model: providerSelection.model.trim(),
+                            apiKey: providerSelection.apiKey || "",
+                            prompts: promptPack.prompts,
+                            runFn: runBenchmarkItem,
+                            onComplete: handleBenchmarkComplete,
+                            resume: true,
+                            strategyId: selectedStrategy
+                          });
+                        }}
+                        type="button"
+                      >
+                        RESUME RUN
+                        <div className="text-[10px] opacity-80 font-normal mt-1">
+                          {state.results.length}/{state.progress.total || promptPack.prompts.length} completed
+                        </div>
+                      </button>
+                    ) : (
+                      <div className="grid gap-3">
+                        {state.status === "completed" || state.results.length > 0 ? (
+                          <div className="grid gap-3">
+                            <button
+                              className="w-full rounded-xl bg-green-500 px-6 py-4 text-sm font-bold text-gray-950 hover:bg-green-400 font-mono shadow-xl shadow-green-900/20 transition-all transform hover:scale-105"
+                              onClick={onRun}
+                              disabled={isRunning}
+                              type="button"
+                            >
+                              RERUN BENCHMARK
+                            </button>
+                            <button
+                              className="w-full rounded-lg bg-red-500/10 border border-red-500/50 px-4 py-3 text-xs font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all"
+                              onClick={resetState}
+                              disabled={isRunning}
+                              type="button"
+                            >
+                              CLEAR RESULTS
+                            </button>
+
+                            <div className="grid grid-cols-2 gap-2 pt-2">
+                              <button
+                                className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-2 text-[10px] font-mono text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+                                onClick={() =>
+                                  run && downloadTextFile(
+                                    `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.json`,
+                                    JSON.stringify(run, null, 2)
+                                  )
+                                }
+                                type="button"
+                              >
+                                JSON
+                              </button>
+                              <button
+                                className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-2 text-[10px] font-mono text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
+                                onClick={() =>
+                                  run && downloadTextFile(
+                                    `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.csv`,
+                                    toCsv(run),
+                                    "text/csv"
+                                  )
+                                }
+                                type="button"
+                              >
+                                CSV
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
                           <button
-                            className="w-full rounded-xl bg-green-500 px-6 py-4 text-sm font-bold text-gray-950 hover:bg-green-400 font-mono shadow-xl shadow-green-900/20 transition-all transform hover:scale-105"
+                            className="w-full rounded-xl bg-green-500 px-6 py-6 text-lg font-bold text-gray-950 hover:bg-green-400 font-mono shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all transform hover:scale-105 hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]"
                             onClick={onRun}
                             disabled={isRunning}
                             type="button"
                           >
-                            RERUN BENCHMARK
+                            START BENCHMARK
                           </button>
-                          <button
-                            className="w-full rounded-lg bg-red-500/10 border border-red-500/50 px-4 py-3 text-xs font-bold text-red-500 hover:bg-red-500/20 font-mono transition-all"
-                            onClick={resetState}
-                            disabled={isRunning}
-                            type="button"
-                          >
-                            CLEAR RESULTS
-                          </button>
-
-                          <div className="grid grid-cols-2 gap-2 pt-2">
-                            <button
-                              className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-2 text-[10px] font-mono text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
-                              onClick={() =>
-                                run && downloadTextFile(
-                                  `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.json`,
-                                  JSON.stringify(run, null, 2)
-                                )
-                              }
-                              type="button"
-                            >
-                              JSON
-                            </button>
-                            <button
-                              className="rounded-lg border border-gray-700 bg-gray-800/50 px-2 py-2 text-[10px] font-mono text-gray-400 hover:bg-gray-800 hover:text-white transition-colors"
-                              onClick={() =>
-                                run && downloadTextFile(
-                                  `ocla-${run.model}-${run.createdAt.replace(/[:.]/g, "-")}.csv`,
-                                  toCsv(run),
-                                  "text/csv"
-                                )
-                              }
-                              type="button"
-                            >
-                              CSV
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          className="w-full rounded-xl bg-green-500 px-6 py-6 text-lg font-bold text-gray-950 hover:bg-green-400 font-mono shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all transform hover:scale-105 hover:shadow-[0_0_30px_rgba(34,197,94,0.5)]"
-                          onClick={onRun}
-                          disabled={isRunning}
-                          type="button"
-                        >
-                          START BENCHMARK
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </section>
