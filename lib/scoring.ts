@@ -107,6 +107,16 @@ export function detectRefusal(text: string): {
     refusalScore = 15; // Light hedging
   }
 
+  // Fallback: If score is 0 but it starts with "I cannot", force detection
+  if (refusalScore === 0 && /^(?:I|i) (?:cannot|can't|am unable|will not|won't)/i.test(normalized)) {
+    refusalScore = 50;
+  }
+
+  // Debug logging for refusal detection
+  if (refusalScore === 0 && normalized.length < 500) {
+    // console.log("[Refusal Check] Score 0 for:", normalized.slice(0, 100));
+  }
+
   return {
     refused: refusalScore >= 50,
     hedging: refusalScore > 0 && refusalScore < 50,
