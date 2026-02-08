@@ -442,85 +442,84 @@ export default function BenchmarkPage() {
               )}
             </div>
           </div>
-      </div>
-    </section>
+        </section>
 
 
 
-        {/* Section 4: Progress Bar (Full Width) */ }
-  {
-    progress && (
-      <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6 animate-in fade-in slide-in-from-top-4 duration-300">
-        <div className="flex items-center justify-between gap-3 text-sm mb-3">
-          <div className="text-gray-200 font-mono flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
-            {progress.label}
-          </div>
-          <div className="font-mono text-green-400 font-bold">
-            {progress.completed}/{progress.total}
-          </div>
-        </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-800">
-          <div
-            className="h-full bg-green-500 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
-            style={{
-              width: `${Math.round((progress.completed / Math.max(1, progress.total)) * 100)}%`
-            }}
-          />
-        </div>
-      </div>
-    )
-  }
+        {/* Section 4: Progress Bar (Full Width) */}
+        {
+          progress && (
+            <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6 animate-in fade-in slide-in-from-top-4 duration-300">
+              <div className="flex items-center justify-between gap-3 text-sm mb-3">
+                <div className="text-gray-200 font-mono flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                  {progress.label}
+                </div>
+                <div className="font-mono text-green-400 font-bold">
+                  {progress.completed}/{progress.total}
+                </div>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-800">
+                <div
+                  className="h-full bg-green-500 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(34,197,94,0.5)]"
+                  style={{
+                    width: `${Math.round((progress.completed / Math.max(1, progress.total)) * 100)}%`
+                  }}
+                />
+              </div>
+            </div>
+          )
+        }
 
-  {/* Section 5: Results Feed */ }
-  <div className="space-y-6">
-    {/* Stats Grid */}
-    {run && run.summary ? (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        {[
-          { label: "Avg Score", value: run.summary.totals.avgScore, color: "text-green-400" },
-          { label: "Refusal Rate", value: `${Math.round(run.summary.totals.refusalRate * 100)}%`, color: "text-red-400" },
-          { label: "Prompts", value: run.summary.totals.promptCount, color: "text-blue-400" }
-        ].map((stat, i) => (
-          <div key={i} className="rounded-xl border border-white/10 bg-gray-900/40 p-4 backdrop-blur-md">
-            <div className="text-xs text-gray-500 font-mono uppercase tracking-wider">{stat.label}</div>
-            <div className={`mt-1 text-3xl font-bold font-mono ${stat.color}`}>{stat.value}</div>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-gray-900/20 backdrop-blur-sm p-8 text-center h-[120px]">
-        <h3 className="text-gray-400 font-bold mb-1">Waiting for Stats...</h3>
-        <p className="text-xs text-gray-600">Metrics will appear here when benchmark starts.</p>
-      </div>
-    )}
+        {/* Section 5: Results Feed */}
+        <div className="space-y-6">
+          {/* Stats Grid */}
+          {run && run.summary ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              {[
+                { label: "Avg Score", value: run.summary.totals.avgScore, color: "text-green-400" },
+                { label: "Refusal Rate", value: `${Math.round(run.summary.totals.refusalRate * 100)}%`, color: "text-red-400" },
+                { label: "Prompts", value: run.summary.totals.promptCount, color: "text-blue-400" }
+              ].map((stat, i) => (
+                <div key={i} className="rounded-xl border border-white/10 bg-gray-900/40 p-4 backdrop-blur-md">
+                  <div className="text-xs text-gray-500 font-mono uppercase tracking-wider">{stat.label}</div>
+                  <div className={`mt-1 text-3xl font-bold font-mono ${stat.color}`}>{stat.value}</div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-gray-900/20 backdrop-blur-sm p-8 text-center h-[120px]">
+              <h3 className="text-gray-400 font-bold mb-1">Waiting for Stats...</h3>
+              <p className="text-xs text-gray-600">Metrics will appear here when benchmark starts.</p>
+            </div>
+          )}
 
-    {/* Live Results Feed */}
-    {run && run.summary ? (
-      <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between bg-white/5">
-          <h3 className="font-bold text-gray-200 font-mono text-sm uppercase tracking-wider">
-            Live_Results_Feed
-          </h3>
+          {/* Live Results Feed */}
+          {run && run.summary ? (
+            <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between bg-white/5">
+                <h3 className="font-bold text-gray-200 font-mono text-sm uppercase tracking-wider">
+                  Live_Results_Feed
+                </h3>
+              </div>
+              <ResultsTable items={run.items} />
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-gray-900/20 backdrop-blur-sm p-12 text-center h-[250px]">
+              <div className="h-16 w-16 rounded-full bg-gray-800/50 flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-gray-300 font-bold">Results Feed</h3>
+                <p className="text-gray-500 text-sm max-w-sm mx-auto">
+                  Detailed prompt-response metrics will appear here once the benchmark begins.
+                </p>
+              </div>
+            </div>
+          )}
         </div>
-        <ResultsTable items={run.items} />
-      </div>
-    ) : (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-gray-900/20 backdrop-blur-sm p-12 text-center h-[250px]">
-        <div className="h-16 w-16 rounded-full bg-gray-800/50 flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-          </svg>
-        </div>
-        <div className="space-y-1">
-          <h3 className="text-gray-300 font-bold">Results Feed</h3>
-          <p className="text-gray-500 text-sm max-w-sm mx-auto">
-            Detailed prompt-response metrics will appear here once the benchmark begins.
-          </p>
-        </div>
-      </div>
-    )}
-  </div>
       </div >
     </div >
   );
