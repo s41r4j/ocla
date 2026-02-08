@@ -104,25 +104,57 @@ export default function LeaderboardPage() {
           <h3 className="mb-6 font-bold text-gray-200 text-sm uppercase flex items-center gap-2 font-mono tracking-wider">
             <Activity size={16} className="text-red-500" /> Refusal_Probabilities
           </h3>
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={false} />
-                <XAxis type="number" stroke="#666" tick={{ fontSize: 10, fill: "#666", fontFamily: "monospace" }} domain={[0, 100]} />
-                <YAxis
-                  dataKey="model"
-                  type="category"
-                  stroke="#888"
-                  width={120} // Increased width for model names
-                  tick={{ fontSize: 10, fill: "#888", fontFamily: "monospace" }}
-                />
-                <Tooltip
-                  cursor={{ fill: '#ffffff', opacity: 0.05 }}
-                  contentStyle={{ background: "#000", border: "1px solid #333", color: "#eee", fontFamily: "monospace" }}
-                />
-                <Bar dataKey="refusalPct" fill="#ef4444" radius={[0, 2, 2, 0]} barSize={20} />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="h-[350px] w-full">
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 20 }}>
+                  <defs>
+                    <linearGradient id="refusalGradient" x1="0" y1="0" x2="1" y2="0">
+                      <stop offset="0%" stopColor="#ef4444" stopOpacity={0.6} />
+                      <stop offset="100%" stopColor="#ef4444" stopOpacity={1} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#333" horizontal={false} strokeOpacity={0.2} />
+                  <XAxis type="number" stroke="#666" tick={{ fontSize: 10, fill: "#666", fontFamily: "monospace" }} domain={[0, 100]} />
+                  <YAxis
+                    dataKey="model"
+                    type="category"
+                    stroke="#888"
+                    width={140}
+                    tick={{ fontSize: 11, fill: "#aaa", fontFamily: "monospace", fontWeight: "bold" }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: '#ffffff', opacity: 0.05 }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-black/90 border border-red-500/30 p-3 rounded shadow-xl backdrop-blur-xl">
+                            <div className="text-red-400 font-bold font-mono text-sm mb-1">{data.model}</div>
+                            <div className="text-gray-300 text-xs font-mono">
+                              Refusal Rate: <span className="text-white font-bold">{data.refusalPct}%</span>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Bar
+                    dataKey="refusalPct"
+                    fill="url(#refusalGradient)"
+                    radius={[0, 4, 4, 0]}
+                    barSize={chartData.length === 1 ? 60 : 30}
+                    animationDuration={1500}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full w-full flex flex-col items-center justify-center text-gray-500 font-mono text-sm border-2 border-dashed border-white/5 rounded-lg">
+                <p>NO_DATA_AVAILABLE</p>
+                <p className="text-xs text-gray-600 mt-2">Run benchmarks to populate telemetry.</p>
+              </div>
+            )}
           </div>
         </div>
 
