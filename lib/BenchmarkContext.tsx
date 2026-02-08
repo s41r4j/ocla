@@ -162,6 +162,7 @@ export function BenchmarkProvider({ children }: { children: ReactNode }) {
 
                 const result = await runFn({
                     ...config,
+                    strategyId: prompt.strategyId || config.strategyId,
                     prompt
                 });
 

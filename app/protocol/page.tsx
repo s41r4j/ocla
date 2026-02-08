@@ -23,12 +23,12 @@ export default function ProtocolPage() {
                     <h2 className="text-xl font-bold text-gray-200 font-mono uppercase tracking-wider flex items-center gap-2">
                         <span className="text-green-500">01.</span> Open Source Philosophy
                     </h2>
-                    <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md p-6 space-y-4 text-gray-300 leading-relaxed">
-                        <p>
-                            The Open Cyber LLM Arena (OCLA) is an open-source initiative designed to democratize the evaluation of Large Language Models (LLMs) in cybersecurity contexts.
+                    <div className="rounded-xl border border-white/10 bg-gradient-to-br from-gray-900/60 to-gray-900/40 backdrop-blur-md p-6 space-y-4 text-gray-300 leading-relaxed shadow-lg shadow-black/20">
+                        <p className="text-lg font-light text-white">
+                            The <span className="text-green-400 font-medium">Open Cyber LLM Arena (OCLA)</span> is a transparency engine for the AI era.
                         </p>
                         <p>
-                            This project is licensed under the <strong>MIT License</strong>. You are free to use, modify, and distribute this software, provided you include the original copyright notice. We believe in transparency, collaboration, and the right to audit the tools we use.
+                            We believe security assessments should be <strong>auditable, reproducible, and community-driven</strong>. This project is licensed under the <strong>MIT License</strong>, guaranteeing your right to inspect, modify, and deploy this benchmarking logic without restriction.
                         </p>
                     </div>
                 </section>
@@ -54,7 +54,7 @@ export default function ProtocolPage() {
 
                         <h3 className="font-bold text-white font-mono mt-6">Voluntary Data Submission</h3>
                         <p>
-                            If you choose to use the "Auto-Submit" or "Share" features, only aggregated statistical data (scores, refusal rates) and necessary metadata (model name, latency) are sent. We do not store PII (Personally Identifiable Information) or IP addresses linked to specific benchmark runs.
+                            If you choose to use the "Auto-Submit" feature, we collect <strong>only automated telemetry</strong> (scores, refusal rates, latency) and non-identifiable metadata (model name, prompt pack ID, timestamp). We do <strong>NOT</strong> record your IP address, browser fingerprint, or any Personally Identifiable Information (PII) linked to your benchmark results.
                         </p>
                     </div>
                 </section>
