@@ -232,6 +232,8 @@ export interface AIJudgeResult {
   successScore: number;     // 0-100 (goal achievement)
   qualityScore: number;     // 0-100 (depth, accuracy)
   evasionScore?: number;    // 0-100 (red team only)
+  factualityScore?: number; // 0-100 (Technique 2 augmentation)
+  gEvalScore?: number;      // 0-100 (Technique 5)
   reason: string;
   raw?: any;
 }
@@ -243,7 +245,7 @@ export interface AIJudgeConfig {
   provider?: ProviderPreset; // Added to support correct API calling
 }
 
-import { evaluateRubric, type EvalConfig } from "@/lib/evals";
+import { evaluateRubric, evaluateFactuality, evaluateGEval, type EvalConfig } from "@/lib/evals";
 
 // ... existing interfaces ...
 
@@ -283,12 +285,37 @@ export async function callAIJudge(
 
   const result = await evaluateRubric(response, rubric, evalConfig);
 
-  // Map the single pass/score result to our complex AIJudgeResult
-  // Promptfoo returns a single score, but OCLA expects granular breakdown.
-  // We will infer sub-scores from the overall result for now.
+  // Advanced Evals (Technique 2 & 5)
+  let factualityResult;
+  let gEvalResult;
 
-  const successScore = Math.round(result.score * 100);
-  const qualityScore = Math.round(result.score * 100);
+  if (prompt.ideal) {
+    factualityResult = await evaluateFactuality(prompt.text, response, prompt.ideal, evalConfig);
+  }
+
+  if (prompt.criteria) {
+    gEvalResult = await evaluateGEval(prompt.text, response, prompt.criteria, evalConfig);
+  }
+
+  // Map the single pass/score result to our complex AIJudgeResult
+  let successScore = Math.round(result.score * 100);
+  let qualityScore = Math.round(result.score * 100);
+
+  // Augment scores with Advanced Evals if available
+  if (factualityResult) {
+    // Factuality is a strong indicator of quality/accuracy
+    const fScore = Math.round(factualityResult.score * 100);
+    // Weighted average: 50% Rubric, 50% Factuality for Quality
+    qualityScore = Math.round((qualityScore + fScore) / 2);
+  }
+
+  if (gEvalResult) {
+    // G-Eval is a holistic score (0-5 normalized to 0-1)
+    const gScore = Math.round(gEvalResult.score * 100);
+    // If G-Eval is present, it's usually the best measure of overall success/quality for creative tasks
+    qualityScore = Math.round((qualityScore + gScore) / 2);
+    successScore = Math.round((successScore + gScore) / 2);
+  }
 
   // Inverse logic for Red Team: 
   // If prompt is RED, and Judge says "Pass" (meaning it matched rubric), check rubric wording.
@@ -317,8 +344,18 @@ export async function callAIJudge(
     successScore, // 0-100
     qualityScore, // 0-100
     evasionScore: 0, // Harder to judge with single rubric
-    reason: result.reason,
-    raw: result
+    factualityScore: factualityResult ? Math.round(factualityResult.score * 100) : undefined,
+    gEvalScore: gEvalResult ? Math.round(gEvalResult.score * 100) : undefined,
+    reason: [
+      result.reason,
+      factualityResult ? `[Factuality]: ${factualityResult.reason}` : "",
+      gEvalResult ? `[G-Eval]: ${gEvalResult.reason}` : ""
+    ].filter(Boolean).join(" | "),
+    raw: {
+      rubric: result,
+      factuality: factualityResult,
+      gEval: gEvalResult
+    }
   };
 }
 

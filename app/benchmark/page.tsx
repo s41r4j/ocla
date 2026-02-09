@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { ProviderSelector, type ProviderSelection } from "@/components/ProviderSelector";
 import { PromptPackSelector } from "@/components/PromptPackSelector";
 import { ResultsTable } from "@/components/ResultsTable";
+import { ScoringExplainer } from "@/components/ScoringExplainer";
 
 import { runBenchmarkItem, summarize } from "@/lib/benchmarkRunner";
 import { useBenchmark } from "@/lib/BenchmarkContext";
@@ -508,9 +509,12 @@ export default function BenchmarkPage() {
           {run && run.summary ? (
             <div className="rounded-xl border border-white/10 bg-gray-900/40 backdrop-blur-md overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between bg-white/5">
-                <h3 className="font-bold text-gray-200 font-mono text-sm uppercase tracking-wider">
-                  Live_Results_Feed
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-bold text-gray-200 font-mono text-sm uppercase tracking-wider">
+                    Live_Results_Feed
+                  </h3>
+                  <ScoringExplainer />
+                </div>
               </div>
               <ResultsTable items={run.items} />
             </div>

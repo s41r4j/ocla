@@ -6,6 +6,8 @@ export type Prompt = {
   title: string;
   text: string;
   expectedKeywords?: (string | WeightedKeyword)[];
+  ideal?: string;    // For Factuality (Technique 2)
+  criteria?: string; // For G-Eval (Technique 5)
 };
 
 export type PromptPack = {
