@@ -113,7 +113,10 @@ export async function callOpenAiApi(args: {
     maxTokens: number;
     temperature: number;
 }): Promise<string> {
-    const url = `${args.baseUrl.replace(/\/$/, "")}/chat/completions`;
+    let url = args.baseUrl.replace(/\/$/, "");
+    if (!url.endsWith("/chat/completions")) {
+        url += "/chat/completions";
+    }
     // log(`Calling OpenAI API: ${url}`);
     // log(`Model: ${args.model}, MaxTokens: ${args.maxTokens}, Temp: ${args.temperature}`);
 
