@@ -2,11 +2,11 @@ import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen py-12">
+    <div className="relative min-h-screen pt-12 pb-6">
       {/* Background Grid */}
       <div className="absolute inset-0 z-0 pointer-events-none bg-grid-pattern [mask-image:linear-gradient(to_bottom,white,transparent)]" />
 
-      <main className="relative z-10 mx-auto max-w-7xl px-6 space-y-20">
+      <main className="relative z-10 mx-auto max-w-7xl px-6 space-y-12">
 
         {/* Hero Section */}
         <section className="space-y-8 text-center max-w-4xl mx-auto">
@@ -89,8 +89,8 @@ export default function HomePage() {
             <div>
               <h3 className="text-lg font-bold text-yellow-500 font-mono mb-2">SAFETY_PROTOCOLS_ACTIVE</h3>
               <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">
-                OCLA ships with a curated &quot;Safe Pack&quot; containing educational prompts.
-                Custom packs (JSON) can be imported for internal Red Teaming operations.
+                OCLA operates on a strict <span className="text-gray-300 font-bold">No-Log / No-Store Policy</span>.
+                All benchmarks run client-side. API keys and prompt data are <span className="text-gray-300 font-bold">never stored</span> on our servers.
               </p>
             </div>
           </div>
