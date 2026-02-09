@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X } from "lucide-react";
+import { Dialog } from "@headlessui/react";
 
 export function ScoringExplainer() {
     const [isOpen, setIsOpen] = useState(false);
@@ -17,14 +18,18 @@ export function ScoringExplainer() {
                 ?
             </button>
 
-            {isOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-                    <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-800 bg-gray-950 shadow-2xl animate-in zoom-in-95 duration-200">
+            <Dialog open={isOpen} onClose={() => setIsOpen(false)} className="relative z-50">
+                {/* Backdrop */}
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" aria-hidden="true" />
+
+                {/* Container */}
+                <div className="fixed inset-0 flex items-center justify-center p-4">
+                    <Dialog.Panel className="w-full max-w-2xl overflow-hidden rounded-2xl border border-gray-800 bg-gray-950 shadow-2xl">
                         {/* Header */}
                         <div className="flex items-center justify-between border-b border-gray-800 bg-gray-900/50 px-6 py-4">
-                            <h3 className="font-mono text-lg font-bold text-gray-100">
+                            <Dialog.Title className="font-mono text-lg font-bold text-gray-100">
                                 System Scoring Guide
-                            </h3>
+                            </Dialog.Title>
                             <button
                                 onClick={() => setIsOpen(false)}
                                 className="rounded-lg p-1 text-gray-500 hover:bg-gray-800 hover:text-white transition-colors"
@@ -111,13 +116,15 @@ export function ScoringExplainer() {
                             <button
                                 onClick={() => setIsOpen(false)}
                                 className="w-full rounded-lg bg-white/5 py-2 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+                                type="button"
                             >
                                 Close Guide
                             </button>
                         </div>
-                    </div>
+                    </Dialog.Panel>
                 </div>
-            )}
+            </Dialog>
         </>
     );
 }
+
