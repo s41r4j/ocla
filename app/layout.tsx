@@ -34,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <footer className="border-t border-gray-800 pt-4 text-xs text-gray-400">
               <p>
                 Research-only benchmarking. Do not use outputs for unauthorized access. No API keys are
-                ever sent to the server when running benchmarks in-browser.
+                ever sent to the server when running benchmarks in-browser. Share responsibly at your own risk!
               </p>
             </footer>
           </div>

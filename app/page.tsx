@@ -23,7 +23,7 @@ export default function HomePage() {
 
           <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed mb-12">
             Stop guessing if your LLM is secure or just stubborn. <br className="hidden md:block" />
-            OCLA provides <span className="text-gray-100 font-semibold">uncensored, privacy-first benchmarking</span> for offensive and defensive cybersecurity capabilities.
+            OCLA is a <span className="text-gray-100 font-semibold">crowdsourced, privacy-first platform</span> where anyone can contribute to evaluating LLMs on uncensored offensive and defensive cybersecurity capabilities.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
@@ -69,27 +69,37 @@ export default function HomePage() {
               OCLA exists to quantify the fine line between <span className="text-green-400 font-medium">Helpful Security Assistant</span> and <span className="text-red-400 font-medium">Over-Refusal</span>.
             </p>
           </div>
-          <div className="relative h-full min-h-[300px] bg-gradient-to-br from-gray-900 to-black rounded-xl border border-gray-800 p-8 flex flex-col justify-center">
+          <div className="relative h-full min-h-[350px] bg-[#080c14] rounded-xl border border-gray-800/60 p-8 flex flex-col justify-center overflow-hidden shadow-2xl">
+            {/* Subtle Grid Background for the card */}
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f1a_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f1a_1px,transparent_1px)] bg-[size:24px_24px]" />
+
+            {/* Glow Effect */}
+            <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-br from-blue-500/5 via-transparent to-red-500/5 pointer-events-none animate-pulse-slow" />
+
             {/* Decorative mock graph/terminal */}
-            <div className="absolute top-0 right-0 p-4 opacity-20">
-              <FaRobot className="w-32 h-32 text-gray-700" />
+            <div className="absolute top-4 right-4 p-2 opacity-10">
+              <FaRobot className="w-40 h-40 text-gray-500 transform rotate-12" />
             </div>
-            <div className="space-y-4 relative z-10 font-mono text-sm">
-              <div className="flex justify-between items-center text-gray-400 border-b border-gray-800 pb-2">
-                <span>METRIC</span>
-                <span>VALUE</span>
+
+            <div className="space-y-6 relative z-10 font-mono text-sm">
+              <div className="flex justify-between items-center text-gray-500 border-b border-gray-800 pb-3 text-xs tracking-widest uppercase">
+                <span>Metric</span>
+                <span>Score</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-blue-400">Cybersecurity Knowledge</span>
-                <span className="text-white">92.4%</span>
+
+              <div className="group flex justify-between items-center p-3 rounded-lg bg-blue-500/5 border border-blue-500/10 hover:border-blue-500/30 transition-all">
+                <span className="text-blue-400 font-semibold group-hover:text-blue-300 transition-colors">Cybersec Knowledge</span>
+                <span className="text-blue-100 font-bold text-lg">92.4%</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-red-400">Refusal Rate (False Pos)</span>
-                <span className="text-white">12.1%</span>
+
+              <div className="group flex justify-between items-center p-3 rounded-lg bg-red-500/5 border border-red-500/10 hover:border-red-500/30 transition-all">
+                <span className="text-red-400 font-semibold group-hover:text-red-300 transition-colors">Refusal Rate (False Pos)</span>
+                <span className="text-red-100 font-bold text-lg">12.1%</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-green-400">Code Safety</span>
-                <span className="text-white">98.9%</span>
+
+              <div className="group flex justify-between items-center p-3 rounded-lg bg-green-500/5 border border-green-500/10 hover:border-green-500/30 transition-all">
+                <span className="text-green-400 font-semibold group-hover:text-green-300 transition-colors">Code Safety</span>
+                <span className="text-green-100 font-bold text-lg">98.9%</span>
               </div>
             </div>
           </div>
@@ -144,25 +154,36 @@ export default function HomePage() {
 
         {/* --- FAQ / TRUST --- */}
         <section className="border-t border-gray-800 pt-24 pb-12">
-          <div className="bg-gradient-to-r from-gray-900 to-black rounded-2xl border border-gray-800 p-8 md:p-12">
-            <div className="md:flex items-start gap-8">
+          <div className="relative overflow-hidden rounded-2xl border border-gray-800 bg-[#080c14] p-8 md:p-12 shadow-[0_0_40px_-10px_rgba(234,179,8,0.1)]">
+            {/* Decorative Top Highlight */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500/50 to-transparent opacity-50" />
+
+            <div className="md:flex items-start gap-8 relative z-10">
               <div className="mb-6 md:mb-0 shrink-0">
-                <div className="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20">
-                  <FaLock className="w-8 h-8 text-yellow-500" />
+                <div className="w-16 h-16 rounded-xl bg-yellow-500/10 flex items-center justify-center border border-yellow-500/20 shadow-[0_0_15px_rgba(234,179,8,0.15)]">
+                  <FaLock className="w-8 h-8 text-yellow-500 drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" />
                 </div>
               </div>
               <div className="space-y-6">
-                <h3 className="text-2xl font-bold font-mono text-white">Privacy is Non-Negotiable</h3>
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <h4 className="text-green-400 font-bold text-sm uppercase tracking-wider">Client-Side Only</h4>
-                    <p className="text-gray-400 text-sm">
+                <h3 className="text-2xl font-bold font-mono text-white tracking-tight">
+                  Privacy is <span className="text-yellow-500">Non-Negotiable</span>
+                </h3>
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-3">
+                    <h4 className="flex items-center gap-2 text-green-400 font-bold text-xs uppercase tracking-wider font-mono">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.6)]" />
+                      Client-Side Only
+                    </h4>
+                    <p className="text-gray-400 text-sm leading-relaxed">
                       We do not proxy your requests. All benchmark traffic goes directly from your browser to your model provider (OpenAI, Anthropic, or Localhost).
                     </p>
                   </div>
-                  <div className="space-y-2">
-                    <h4 className="text-green-400 font-bold text-sm uppercase tracking-wider">Zero Data Retention</h4>
-                    <p className="text-gray-400 text-sm">
+                  <div className="space-y-3">
+                    <h4 className="flex items-center gap-2 text-green-400 font-bold text-xs uppercase tracking-wider font-mono">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-400 shadow-[0_0_5px_rgba(74,222,128,0.6)]" />
+                      Zero Data Retention
+                    </h4>
+                    <p className="text-gray-400 text-sm leading-relaxed">
                       We never store your API keys, prompts, or model outputs on our servers. The only data we receive is the final numerical score if you choose to submit it.
                     </p>
                   </div>
