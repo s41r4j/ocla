@@ -14,17 +14,11 @@ export default function HomePage() {
 
         {/* --- HERO SECTION --- */}
         <section className="pt-16 pb-8 text-center max-w-5xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-900/20 border border-green-500/30 text-green-400 text-xs font-mono mb-8 animate-fade-in-up">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-            </span>
-            SYSTEM_STATUS: ONLINE // READY_FOR_EVAL
-          </div>
+
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-8 bg-clip-text text-transparent bg-gradient-to-br from-white via-gray-200 to-gray-500 leading-[1.1]">
             The Standard for <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 font-mono">Real-World Cyber Eval</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-600 font-mono">Open Cyber LLM Arena</span>
           </h1>
 
           <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto leading-relaxed mb-12">
